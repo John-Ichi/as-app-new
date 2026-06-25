@@ -1,4 +1,3 @@
-import "@/global.css";
 import {
   DrawerContentScrollView,
   DrawerItemList,

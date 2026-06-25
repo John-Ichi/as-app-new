@@ -5,15 +5,15 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
-const Dashboard = () => {
+const Notifications = () => {
   return (
     <SafeAreaView
       edges={["bottom"]}
       className="flex-1 items-center justify-center bg-background"
     >
-      <Text>Home</Text>
+      <Text>Notifications</Text>
     </SafeAreaView>
   );
 };
 
-export default Dashboard;
+export default Notifications;

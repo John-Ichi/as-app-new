@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView className="flex-1">
       <Drawer
         screenOptions={{
           drawerActiveTintColor: "rgba(11, 61, 89, 0.44)",

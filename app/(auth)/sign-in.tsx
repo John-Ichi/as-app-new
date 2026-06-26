@@ -11,7 +11,7 @@ const SignIn = () => {
       >
         Sign-Up
       </Link>
-      <Link href="/(tabs)" className="m-2 rounded-sm bg-primary text-white p-4">
+      <Link href="/(drawer)" className="m-2 rounded-sm bg-primary text-white p-4">
         Index
       </Link>
       <Link

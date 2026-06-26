@@ -1,4 +1,4 @@
-import { icons } from "./icons";
+import { icons } from "@/constants/icons";
 
 export const DrawerRoutes = [
   {

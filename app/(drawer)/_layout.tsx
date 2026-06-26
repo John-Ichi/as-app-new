@@ -1,4 +1,5 @@
-import "@/global.css";
+import { DrawerRoutes } from "@/constants/data";
+import { icons } from "@/constants/icons";
 import {
   DrawerContentScrollView,
   DrawerItemList,
@@ -8,12 +9,10 @@ import { Drawer } from "expo-router/drawer";
 import { Image, Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DrawerRoutes } from "../../constants/data";
-import { icons } from "../../constants/icons";
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView>
       <Drawer
         screenOptions={{
           drawerActiveTintColor: "rgba(11, 61, 89, 0.44)",

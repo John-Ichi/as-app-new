@@ -1,6 +1,6 @@
 import { Link, Stack } from "expo-router";
 import { Image, Text, View } from "react-native";
-import { icons } from "../constants/icons";
+import { icons } from "@/constants/icons";
 
 const Onboarding = () => {
   return (

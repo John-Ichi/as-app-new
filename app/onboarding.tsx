@@ -1,6 +1,6 @@
+import { icons } from "@/constants/icons";
 import { Link, Stack } from "expo-router";
 import { Image, Text, View } from "react-native";
-import { icons } from "@/constants/icons";
 
 const Onboarding = () => {
   return (
@@ -10,15 +10,15 @@ const Onboarding = () => {
         source={icons.logo}
         style={{ height: "35%", aspectRatio: 1134 / 618 }}
       />
-      <Text className="text-xl font-bold text-primary">
+      <Text className="text-xl text-primary font-poppins-bold">
         Welcome to AmmoSense!
       </Text>
-      <Text className="text-lg font-bold text-accent">
+      <Text className="text-lg text-accent font-poppins-semibold">
         Predictive Water Quality Monitoring
       </Text>
       <Link
         href="/(auth)/sign-in"
-        className="w-1/3 text-center mt-4 rounded-bg bg-primary text-white p-4"
+        className="rounded-bg bg-primary w-1/2 text-center text-white font-poppins-semibold mt-4 p-3.75"
       >
         Continue
       </Link>

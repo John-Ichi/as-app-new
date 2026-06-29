@@ -6,33 +6,56 @@ import {
 } from "@react-navigation/drawer";
 import { router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
+import { styled } from "nativewind";
 import { Image, Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+
+const SafeAreaView = styled(RNSafeAreaView);
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView className="flex-1">
+      {/** add function onPress for icons.alert */}
       <Drawer
         screenOptions={{
           drawerActiveTintColor: "rgba(11, 61, 89, 0.44)",
+          headerBackground: () => <View className="flex-1 bg-primary" />,
+          headerTitle: (props) => (
+            <Text className="text-lg text-white font-poppins-bold">
+              {props.children}
+            </Text>
+          ),
+          headerRight: () => (
+            <Pressable
+              style={({ pressed }) =>
+                pressed ? { transform: [{ scale: 0.97 }] } : {}
+              }
+            >
+              <View className="size-10 pr-4">
+                <Image
+                  source={icons.alert}
+                  className="size-full"
+                  resizeMode="contain"
+                />
+              </View>
+            </Pressable>
+          ),
+          headerTintColor: "#ffffff",
         }}
         drawerContent={(props) => (
           <View className="flex-1 bg-background">
-            <SafeAreaView
-              style={{ backgroundColor: "#0b3d59" }}
-              edges={["top", "bottom"]}
-            >
-              <View className="flex-row items-center">
+            <SafeAreaView className="bg-primary" edges={["top", "bottom"]}>
+              <View className="flex-row items-center pt-4 px-1">
                 <Image
                   source={icons.logo}
                   style={{ width: 112, height: 112 }}
                 />
                 <View className="flex-1">
-                  <Text className="text-xl font-bold text-white">
+                  <Text className="text-xl text-white font-poppins-bold">
                     AmmoSense
                   </Text>
-                  <Text className="text-md text-white">
+                  <Text className="text-md text-white font-poppins-medium">
                     Predictive Water Quality Monitoring
                   </Text>
                 </View>
@@ -45,17 +68,17 @@ export default function RootLayout() {
               <DrawerItemList {...props} />
             </DrawerContentScrollView>
             <SafeAreaView edges={["bottom"]}>
-              <View className="mt-auto px-6 pb-6 items-center justify-center">
+              <View className="items-center justify-center mt-auto px-6 pb-6">
+                {/** add function onPress for Sign Out */}
                 <Pressable
                   onPress={() => {
-                    console.log("Sign Out");
                     router.replace("/(auth)/sign-in");
                   }}
                   style={({ pressed }) =>
                     pressed ? { transform: [{ scale: 0.97 }] } : {}
                   }
                 >
-                  <Text className="bg-primary py-3 px-12 rounded-bg shadow-md shadow-slate-400/30 text-lg text-white">
+                  <Text className="bg-primary rounded-bg shadow-md shadow-slate-400/30 text-lg text-white font-poppins-medium py-3 px-12 ">
                     Sign Out
                   </Text>
                 </Pressable>
@@ -72,15 +95,17 @@ export default function RootLayout() {
               title: route.title,
               drawerLabel: () => (
                 <View className="flex-1">
-                  <Text className="text-lg text-secondary font-bold">
+                  <Text className="text-lg text-secondary font-poppins-bold">
                     {route.title}
                   </Text>
-                  <Text className="text-sm text-accent">
+                  <Text className="text-sm text-accent font-poppins-medium">
                     {route.description}
                   </Text>
                 </View>
               ),
-              drawerIcon: () => <Image source={route.icon} />,
+              drawerIcon: () => (
+                <Image source={route.icon} className="size-7.7" />
+              ),
             }}
           />
         ))}

@@ -20,7 +20,7 @@ export default function RootLayout() {
   });
   useEffect(() => {
     if (fontsLoaded || fontsError) {
-      void SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded, fontsError]);
   if (!fontsLoaded && !fontsError) return null;

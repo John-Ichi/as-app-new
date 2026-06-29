@@ -31,7 +31,7 @@ export default function RootLayout() {
                 pressed ? { transform: [{ scale: 0.97 }] } : {}
               }
             >
-              <View className="size-10 pr-4">
+              <View className="size-10 pr-4 items-center justify-center">
                 <Image
                   source={icons.alert}
                   className="size-full"

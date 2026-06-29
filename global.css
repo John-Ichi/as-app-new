@@ -6,18 +6,21 @@
 
 @theme {
   --color-background: #e3ebff; /* define background color */
-  --color-foreground: #081126;
-  --color-card: #fff8e7;
-  --color-muted: #f6eecf;
-  --color-muted-foreground: rgba(0, 0, 0, 0.6);
   --color-primary: #0b3d59; /* define primary color */
   --color-secondary: #10222c; /* define secondary color */
   --color-tertiary: rgba(11, 61, 89, 0.44); /* define tertiary color */
   --color-accent: #473f3f; /* define accent color */
   --color-border: rgba(0, 0, 0, 0.1);
-  --color-success: #00993b;
-  --color-destructive: #dc2626;
-  --color-subscription: #8fd1bd;
+  --color-success: #00993b; /* define green color */
+  --color-warning: #ffd42a; /* define yellow color */
+  --color-danger: #de2222; /* define red color */
+
+  /* unused colors
+  --color-foreground: #081126;
+  --color-card: #fff8e7;
+  --color-muted: #f6eecf;
+  --color-muted-foreground: rgba(0, 0, 0, 0.6);
+  */
 
   /* define spacing */
   --spacing-0: 0px;

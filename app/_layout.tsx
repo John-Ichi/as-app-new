@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontsError] = useFonts({
     "poppins-black": require("../assets/fonts/Poppins-Black.ttf"),
     "poppins-bold": require("../assets/fonts/Poppins-Bold.ttf"),
     "poppins-extrabold": require("../assets/fonts/Poppins-ExtraBold.ttf"),
@@ -19,11 +19,11 @@ export default function RootLayout() {
     "poppins-thin": require("../assets/fonts/Poppins-Thin.ttf"),
   });
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded || fontsError) {
       void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
-  if (!fontsLoaded) return null;
+  }, [fontsLoaded, fontsError]);
+  if (!fontsLoaded && !fontsError) return null;
   return (
     <GestureHandlerRootView className="flex-1">
       <Stack screenOptions={{ headerShown: false }} />

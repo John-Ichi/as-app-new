@@ -18,7 +18,7 @@ const Onboarding = () => {
       </Text>
       <Link
         href="/(auth)/sign-in"
-        className="rounded-bg bg-primary w-1/2 text-center text-white font-poppins-semibold mt-4 p-3.75"
+        className="rounded-bg bg-primary w-1/2 text-center text-white font-poppins-semibold mt-4 p-4"
       >
         Continue
       </Link>

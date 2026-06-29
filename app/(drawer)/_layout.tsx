@@ -8,14 +8,13 @@ import { router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { styled } from "nativewind";
 import { Image, Pressable, Text, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView className="flex-1">
+    <>
       {/** add function onPress for icons.alert */}
       <Drawer
         screenOptions={{
@@ -104,12 +103,12 @@ export default function RootLayout() {
                 </View>
               ),
               drawerIcon: () => (
-                <Image source={route.icon} className="size-7.7" />
+                <Image source={route.icon} className="size-8" />
               ),
             }}
           />
         ))}
       </Drawer>
-    </GestureHandlerRootView>
+    </>
   );
 }

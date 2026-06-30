@@ -16,7 +16,7 @@ export interface WaterQualityData {
 
 function classify(id: string, value: number): ParameterReading["status"] {
   const metadata = parameterMap[id];
-  if (!metadata.threshold) return undefined;
+  if (!metadata?.threshold) return undefined;
   if (value > metadata.threshold.critical) return "critical";
   if (value > metadata.threshold.warning) return "warning";
   return "normal";
@@ -34,15 +34,15 @@ function getOverallStatus(
 
 export function useWaterQualityData(): WaterQualityData {
   const readings: ParameterReading[] = [
-    { id: "ammonia", value: 0.07, status: classify("ammonia", 0.07) },
-    { id: "temperature", value: 28.5, status: classify("temperature", 28.5) },
+    { id: "ammonia", value: 0.049, status: classify("ammonia", 0.049) },
+    { id: "temperature", value: 27.5, status: classify("temperature", 27.5) },
     {
       id: "dissolvedOxygen",
-      value: 6.2,
-      status: classify("dissolvedOxygen", 6.2),
+      value: 7.2,
+      status: classify("dissolvedOxygen", 7.2),
     },
-    { id: "pH", value: 7.5, status: classify("pH", 7.5) },
-    { id: "turbidity", value: 3.1, status: classify("turbidity", 3.1) },
+    { id: "pH", value: 7.2, status: classify("pH", 7.2) },
+    { id: "turbidity", value: 2.9, status: classify("turbidity", 2.9) },
   ];
 
   return {

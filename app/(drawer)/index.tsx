@@ -6,29 +6,20 @@ import { Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
-const statusColors: Record<string, string> = {
+const statusColors: Record<"NORMAL" | "WARNING" | "CRITICAL", string> = {
   NORMAL: "bg-success",
   WARNING: "bg-warning",
   CRITICAL: "bg-danger",
 };
 
-{
-  /** update all values dynamically */
-}
-
 const Dashboard = () => {
-  const {
-    overallStatus,
-    parameters: readings,
-    predictiveAlert,
-  } = useWaterQualityData();
+  const { overallStatus, parameters: readings } = useWaterQualityData();
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
       <ScrollView className="flex-1" contentContainerClassName="pb-10">
         <View className="w-full h-16 bg-primary rounded-b-xl"></View>
         <View className="w-full max-w-xl mx-auto px-4">
-          {/** update background color dynamically */}
           <View
             className={`${statusColors[overallStatus]} -mt-14 mx-12 py-4 rounded-xl shadow-md shadow-slate-400/30 items-center justify-center`}
           >
@@ -37,12 +28,12 @@ const Dashboard = () => {
             </Text>
             <Text className="text-xl text-white font-poppins-bold">
               {overallStatus}
-              {/** update value dynamically */}
             </Text>
           </View>
           <View className="mt-6 flex-row flex-wrap justify-between gap-y-5">
             {readings.map((reading) => {
               const metadata = parameterMap[reading.id];
+              if (!metadata) return null;
               const wide = reading.id === "turbidity";
               return (
                 <View

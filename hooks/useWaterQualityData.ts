@@ -9,7 +9,7 @@ export interface ParameterReading {
 export interface WaterQualityData {
   overallStatus: "NORMAL" | "WARNING" | "CRITICAL";
   parameters: ParameterReading[];
-  predictiveAlert?: { risk: string; time: string } | null;
+  predictiveAlert: { risk: "LOW" | "MEDIUM" | "HIGH" };
   isLoading: boolean;
   error: Error | null;
 }
@@ -38,8 +38,8 @@ export function useWaterQualityData(): WaterQualityData {
     { id: "temperature", value: 27.5, status: classify("temperature", 27.5) },
     {
       id: "dissolvedOxygen",
-      value: 7.2,
-      status: classify("dissolvedOxygen", 7.2),
+      value: 7.1,
+      status: classify("dissolvedOxygen", 7.1),
     },
     { id: "pH", value: 7.2, status: classify("pH", 7.2) },
     { id: "turbidity", value: 2.9, status: classify("turbidity", 2.9) },
@@ -48,7 +48,7 @@ export function useWaterQualityData(): WaterQualityData {
   return {
     overallStatus: getOverallStatus(readings),
     parameters: readings,
-    predictiveAlert: null,
+    predictiveAlert: { risk: "LOW" },
     isLoading: false,
     error: null,
   };

@@ -12,8 +12,18 @@ const statusColors: Record<"NORMAL" | "WARNING" | "CRITICAL", string> = {
   CRITICAL: "bg-danger",
 };
 
+const riskColors: Record<"LOW" | "MEDIUM" | "HIGH", string> = {
+  LOW: "text-success",
+  MEDIUM: "text-warning",
+  HIGH: "text-danger",
+};
+
 const Dashboard = () => {
-  const { overallStatus, parameters: readings } = useWaterQualityData();
+  const {
+    overallStatus,
+    parameters: readings,
+    predictiveAlert,
+  } = useWaterQualityData();
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
@@ -71,10 +81,12 @@ const Dashboard = () => {
                   </Text>
                   <Text className="text-md text-primary font-poppins-regular">
                     Risk:{" "}
-                    <Text className="text-success font-poppins-extrabold">
-                      VALUE
+                    <Text
+                      className={`${riskColors[predictiveAlert.risk]} font-poppins-extrabold`}
+                    >
+                      {predictiveAlert.risk}
                     </Text>{" "}
-                    (time)
+                    (24 HRS)
                   </Text>
                 </View>
               </View>

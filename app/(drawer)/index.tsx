@@ -6,13 +6,13 @@ import { Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
-const statusColors: Record<"NORMAL" | "WARNING" | "CRITICAL", string> = {
+const statusColor: Record<"NORMAL" | "WARNING" | "CRITICAL", string> = {
   NORMAL: "bg-success",
   WARNING: "bg-warning",
   CRITICAL: "bg-danger",
 };
 
-const riskColors: Record<"LOW" | "MEDIUM" | "HIGH", string> = {
+const riskColor: Record<"LOW" | "MEDIUM" | "HIGH", string> = {
   LOW: "text-success",
   MEDIUM: "text-warning",
   HIGH: "text-danger",
@@ -31,7 +31,7 @@ const Dashboard = () => {
         <View className="w-full h-16 bg-primary rounded-b-xl"></View>
         <View className="w-full max-w-xl mx-auto px-4">
           <View
-            className={`${statusColors[overallStatus]} -mt-14 mx-12 py-4 rounded-xl shadow-md shadow-slate-400/30 items-center justify-center`}
+            className={`${statusColor[overallStatus]} -mt-14 mx-12 py-4 rounded-xl shadow-md shadow-slate-400/30 items-center justify-center`}
           >
             <Text className="text-lg text-white font-poppins-medium">
               OVERALL AMMONIA STATUS
@@ -41,33 +41,34 @@ const Dashboard = () => {
             </Text>
           </View>
           <View className="mt-6 flex-row flex-wrap justify-between gap-y-5">
-            {readings.map((reading) => {
-              const metadata = parameterMap[reading.id];
-              if (!metadata) return null;
-              const wide = reading.id === "turbidity";
-              return (
-                <View
-                  key={reading.id}
-                  className={`${wide ? "w-full flex-row items-center" : "w-[48%]"} h-28 bg-white rounded-sm p-4 shadow-sm shadow-slate-400/30 justify-between`}
-                >
-                  <View className="flex-row gap-x-2 items-center">
-                    <Image
-                      source={metadata.icon}
-                      className="w-6 h-6"
-                      resizeMode="contain"
-                    />
-                    <Text
-                      className={`${wide ? "tracking-wide" : ""} text-md text-primary font-poppins-bold`}
-                    >
-                      {metadata.label}
+            {readings
+              .filter((r) => parameterMap[r.id])
+              .map((reading) => {
+                const metadata = parameterMap[reading.id];
+                const wide = metadata.fullWidth;
+                return (
+                  <View
+                    key={reading.id}
+                    className={`${wide ? "w-full flex-row items-center" : "w-[48%]"} h-28 bg-white rounded-sm p-4 shadow-sm shadow-slate-400/30 justify-between`}
+                  >
+                    <View className="flex-row gap-x-2 items-center">
+                      <Image
+                        source={metadata.icon}
+                        className="w-6 h-6"
+                        resizeMode="contain"
+                      />
+                      <Text
+                        className={`${wide ? "tracking-wide" : ""} text-md text-primary font-poppins-bold`}
+                      >
+                        {metadata.label}
+                      </Text>
+                    </View>
+                    <Text className="text-lg text-primary font-poppins-bold">
+                      {reading.value} {metadata.unit}
                     </Text>
                   </View>
-                  <Text className="text-lg text-primary font-poppins-bold">
-                    {reading.value} {metadata.unit}
-                  </Text>
-                </View>
-              );
-            })}
+                );
+              })}
             <View className="w-full h-28 flex-row bg-white rounded-sm p-4 shadow-sm shadow-slate-400/30 items-center justify-between">
               <View className="flex-row items-center gap-x-4">
                 <Image
@@ -82,7 +83,7 @@ const Dashboard = () => {
                   <Text className="text-md text-primary font-poppins-regular">
                     Risk:{" "}
                     <Text
-                      className={`${riskColors[predictiveAlert.risk]} font-poppins-extrabold`}
+                      className={`${riskColor[predictiveAlert.risk]} font-poppins-extrabold`}
                     >
                       {predictiveAlert.risk}
                     </Text>{" "}

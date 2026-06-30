@@ -6,6 +6,7 @@ export interface ParameterMetaData {
   label: string;
   unit: string;
   icon: ImageSourcePropType;
+  fullWidth?: boolean;
   threshold?: {
     warning: number;
     critical: number;
@@ -46,6 +47,7 @@ export const parameters: ParameterMetaData[] = [
     label: "Turbidity",
     unit: "NTU",
     icon: icons.turbidity,
+    fullWidth: true,
   },
 ];
 

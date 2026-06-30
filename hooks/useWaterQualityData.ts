@@ -1,7 +1,7 @@
-import { parameterMap } from "@/constants/parameters";
+import { ParameterId, parameterMap } from "@/constants/parameters";
 
 export interface ParameterReading {
-  id: string;
+  id: ParameterId;
   value: number;
   status: "normal" | "warning" | "critical" | undefined;
 }
@@ -14,7 +14,7 @@ export interface WaterQualityData {
   error: Error | null;
 }
 
-function classify(id: string, value: number): ParameterReading["status"] {
+function classify(id: ParameterId, value: number): ParameterReading["status"] {
   const metadata = parameterMap[id];
   if (!metadata?.threshold) return undefined;
   if (value > metadata.threshold.critical) return "critical";

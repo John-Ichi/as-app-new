@@ -1,8 +1,18 @@
 import { icons } from "@/constants/icons";
 import { ImageSourcePropType } from "react-native";
 
+export const parameterIds = [
+  "ammonia",
+  "temperature",
+  "dissolvedOxygen",
+  "pH",
+  "turbidity",
+] as const;
+
+export type ParameterId = (typeof parameterIds)[number];
+
 export interface ParameterMetaData {
-  id: string;
+  id: ParameterId;
   label: string;
   unit: string;
   icon: ImageSourcePropType;
@@ -51,6 +61,8 @@ export const parameters: ParameterMetaData[] = [
   },
 ];
 
-export const parameterMap = Object.fromEntries(
-  parameters.map((p) => [p.id, p]),
-);
+export const parameterMap: Record<ParameterId, ParameterMetaData> =
+  Object.fromEntries(parameters.map((p) => [p.id, p])) as Record<
+    ParameterId,
+    ParameterMetaData
+  >;

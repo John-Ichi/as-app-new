@@ -1,4 +1,4 @@
-import { ParameterId } from "@/constants/parameters";
+import { ParameterId, parameterIds } from "@/constants/parameters";
 
 export interface GraphDataPoint {
   value: number;
@@ -68,7 +68,7 @@ export function useGraphData(): ParameterGraphData[] {
     "turbidity",
   ];
 
-  return ids.map((id) => ({
+  return parameterIds.map((id) => ({
     id,
     oneDay: generateOneDay(id),
     sevenDay: generateSevenDay(id),

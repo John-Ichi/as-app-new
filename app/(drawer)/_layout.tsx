@@ -68,17 +68,17 @@ export default function RootLayout() {
             </DrawerContentScrollView>
             <SafeAreaView edges={["bottom"]}>
               <View className="items-center justify-center mt-auto px-6 pb-6">
-                {/** add function onPress for Sign Out */}
+                {/** add function onPress for Disconnect */}
                 <Pressable
                   onPress={() => {
-                    router.replace("/(auth)/sign-in");
+                    router.replace("/onboarding");
                   }}
                   style={({ pressed }) =>
                     pressed ? { transform: [{ scale: 0.97 }] } : {}
                   }
                 >
                   <Text className="bg-primary rounded-bg shadow-md shadow-slate-400/30 text-lg text-white font-poppins-medium py-3 px-12 ">
-                    Sign Out
+                    Disconnect
                   </Text>
                 </Pressable>
               </View>
@@ -92,6 +92,7 @@ export default function RootLayout() {
             name={route.name}
             options={{
               title: route.title,
+              ...(route.name === "graphs" ? { swipeEnabled: false } : {}),
               drawerLabel: () => (
                 <View className="flex-1">
                   <Text className="text-lg text-secondary font-poppins-bold">

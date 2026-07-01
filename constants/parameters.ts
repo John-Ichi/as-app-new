@@ -26,7 +26,7 @@ export interface ParameterMetaData {
 export const parameters: ParameterMetaData[] = [
   {
     id: "ammonia",
-    label: "Ammonia",
+    label: "AMMONIA",
     unit: "ppm",
     icon: icons.ammonia,
     threshold: {
@@ -36,25 +36,25 @@ export const parameters: ParameterMetaData[] = [
   },
   {
     id: "temperature",
-    label: "Temperature",
+    label: "TEMPERATURE",
     unit: "°C",
     icon: icons.temperature,
   },
   {
     id: "dissolvedOxygen",
-    label: "Dissolved Oxygen",
+    label: "DISSOLVED OXYGEN",
     unit: "mg/L",
     icon: icons.dissolvedOxygen,
   },
   {
     id: "pH",
-    label: "pH Level",
+    label: "pH LEVEL",
     unit: "",
     icon: icons.pH,
   },
   {
     id: "turbidity",
-    label: "Turbidity",
+    label: "TURBIDITY",
     unit: "NTU",
     icon: icons.turbidity,
     fullWidth: true,

@@ -92,13 +92,15 @@ export default function RootLayout() {
             name={route.name}
             options={{
               title: route.title,
-              ...(route.name === "graphs" ? { swipeEnabled: false } : {}),
+              ...(route.name === "graphs" || route.name === "parameters"
+                ? { swipeEnabled: false }
+                : {}),
               drawerLabel: () => (
                 <View className="flex-1">
                   <Text className="text-lg text-secondary font-poppins-bold">
                     {route.title}
                   </Text>
-                  <Text className="text-sm text-accent font-poppins-medium">
+                  <Text className="text-sm text-muted font-poppins-medium">
                     {route.description}
                   </Text>
                 </View>

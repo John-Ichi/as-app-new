@@ -18,7 +18,7 @@ const Onboarding = () => {
         <Text className="text-xl text-primary font-poppins-bold">
           Welcome to AmmoSense!
         </Text>
-        <Text className="text-lg text-accent font-poppins-semibold">
+        <Text className="text-lg text-muted font-poppins-semibold">
           Predictive Water Quality Monitoring
         </Text>
       </View>

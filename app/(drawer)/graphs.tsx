@@ -4,6 +4,7 @@ import {
   parameterIds,
   parameterMap,
 } from "@/constants/parameters";
+import { colors } from "@/constants/theme";
 import { useGraphData } from "@/hooks/useGraphData";
 import { styled } from "nativewind";
 import { useCallback, useRef, useState } from "react";
@@ -49,7 +50,7 @@ const Graphs = () => {
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
       <View className="px-4 pt-6 pb-2 rounded-t-xl bg-background">
-        <View className="flex-row gap-x-2">
+        <View className="w-full max-w-xl mx-auto flex-row gap-x-2">
           {parameterIds.map((id) => (
             <Pressable
               key={id}
@@ -72,7 +73,7 @@ const Graphs = () => {
         contentContainerClassName="pb-10"
         bounces={false}
       >
-        <View className="w-full max-w-xl mx-auto pt-4 px-4 bg-background">
+        <View className="w-full max-w-xl mx-auto pt-4 px-4">
           {allData.length === 0 ? (
             <Text className="text-sm text-center text-gray-500 mt-20 text-base font-poppins-regular">
               No data available. Please check your connection or try again
@@ -151,13 +152,13 @@ const Graphs = () => {
                       rulesColor="rgba(0,0,0,0.06)"
                       showVerticalLines={false}
                       xAxisLabelTextStyle={{
-                        color: "#473f3f",
+                        color: colors.muted,
                         fontFamily: "Poppins-Regular",
                         fontSize: 8,
                       }}
                       xAxisLength={chartWidth}
                       yAxisTextStyle={{
-                        color: "#473f3f",
+                        color: colors.muted,
                         fontFamily: "Poppins-Medium",
                         fontSize: 10,
                       }}

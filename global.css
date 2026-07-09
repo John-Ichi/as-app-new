@@ -9,18 +9,24 @@
   --color-primary: #0b3d59; /* define primary color */
   --color-secondary: #10222c; /* define secondary color */
   --color-tertiary: rgba(11, 61, 89, 0.44); /* define tertiary color */
-  --color-accent: #473f3f; /* define accent color */
-  --color-border: rgba(0, 0, 0, 0.1);
+  --color-muted: #473f3f; /* define muted/gray color */
   --color-success: #00993b; /* define green color */
+  --color-success-light: rgba(
+    156,
+    255,
+    126,
+    0.61
+  ); /* define light green color */
   --color-warning: #ffd42a; /* define yellow color */
+  --color-warning-light: rgba(
+    255,
+    232,
+    139,
+    0.74
+  ); /* define light yellow color */
   --color-danger: #de2222; /* define red color */
-
-  /* unused colors
-  --color-foreground: #081126;
-  --color-card: #fff8e7;
-  --color-muted: #f6eecf;
-  --color-muted-foreground: rgba(0, 0, 0, 0.6);
-  */
+  --color-danger-light: rgba(255, 185, 185, 0.61); /* define light red color */
+  --color-border: rgba(0, 0, 0, 0.1);
 
   /* define spacing */
   --spacing-0: 0px;

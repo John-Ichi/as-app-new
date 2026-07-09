@@ -2,6 +2,7 @@ import alert from "@/assets/icons/alert.png";
 import ammonia from "@/assets/icons/ammonia.png";
 import bell from "@/assets/icons/bell.png";
 import dissolvedOxygen from "@/assets/icons/dissolved-oxygen.png";
+import download from "@/assets/icons/download.png";
 import graph from "@/assets/icons/graph.png";
 import home from "@/assets/icons/home.png";
 import logo from "@/assets/icons/logo.png";
@@ -24,6 +25,7 @@ export const icons = {
   pH,
   turbidity,
   warning,
+  download,
 } as const;
 
 export type IconKey = keyof typeof icons;

@@ -26,12 +26,11 @@ jobs:
 
           # Pulls your secure GitHub authentication token from the repository secrets
           GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
-
           OPENAI_KEY: "ollama"
 
           # Sets up your target Ollama Cloud configuration
-          CONFIG.MODEL: "ollama/qwen3-coder:480b-cloud"
-          CONFIG.FALLBACK_MODELS: "['ollama/qwen3-coder:480b-cloud']"
+          CONFIG.MODEL: "openai/qwen3-coder:480b-cloud"
+          CONFIG.FALLBACK_MODELS: "['openai/qwen3-coder:480b-cloud']"
           CONFIG.CUSTOM_MODEL_MAX_TOKENS: "128000"
           OLLAMA.API_BASE: "https://ollama.com/v1"
           OLLAMA.API_KEY: ${{ secrets.OLLAMA_API_KEY }}

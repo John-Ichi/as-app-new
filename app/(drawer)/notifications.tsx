@@ -13,6 +13,7 @@ const Notifications = () => {
       <ScrollView>
         <View>
           <Text>Test for pull request.</Text>
+          <Text>Added for testing.</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

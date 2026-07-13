@@ -1,5 +1,5 @@
 import { styled } from "nativewind";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -14,6 +14,10 @@ const Notifications = () => {
         <View>
           <Text>Test for pull request.</Text>
           <Text>Added for testing.</Text>
+          <Text>Quick test for pr-agent.</Text>
+          <Pressable onPress={() => {}}>
+            <Text>Press me</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

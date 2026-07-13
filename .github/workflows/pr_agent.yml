@@ -21,16 +21,14 @@ jobs:
       - name: Run PR Agent Engine
         uses: the-pr-agent/pr-agent@v0.39.0
         env:
-          # Automatically triggers an inline review comment block on every new PR
-          PR_AGENT.AUTOMATION.AUTO_REVIEW: "true"
+          CONFIG__LOG_LEVEL: "DEBUG"
+          PR_AGENT__AUTOMATION__AUTO_REVIEW: "true"
 
-          # Pulls your secure GitHub authentication token from the repository secrets
           GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
-          OPENAI_KEY: "ollama"
 
-          # Sets up your target Ollama Cloud configuration
-          CONFIG.MODEL: "openai/qwen3-coder:480b-cloud"
-          CONFIG.FALLBACK_MODELS: "['openai/qwen3-coder:480b-cloud']"
-          CONFIG.CUSTOM_MODEL_MAX_TOKENS: "128000"
-          OLLAMA.API_BASE: "https://ollama.com/v1"
-          OLLAMA.API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          CONFIG__MODEL: "openai/qwen3-coder:480b-cloud"
+          CONFIG__FALLBACK_MODELS: "['openai/qwen3-coder:480b-cloud']"
+          CONFIG__CUSTOM_MODEL_MAX_TOKENS: "128000"
+
+          OPENAI_API_BASE: "https://ollama.com/v1"
+          OPENAI_API_KEY: ${{ secrets.OLLAMA_API_KEY }}

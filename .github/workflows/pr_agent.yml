@@ -24,12 +24,12 @@ jobs:
           OPENAI_KEY: ${{ secrets.OLLAMA_API_KEY}}
           GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
 
-          config.model: "ollama/qwen3-coder:480b-cloud"
-          config.fallback_models: '["ollama/qwen3-coder:480b-cloud"]'
+          config.model: "openai/qwen3-coder:480b-cloud"
+          config.fallback_models: '["openai/qwen3-coder:480b-cloud"]'
           config.custom_model_max_tokens: "8000"
           config.max_diff_tokens: "32000"
 
-          OLLAMA.API_BASE: "https://ollama.com/v1"
+          OPENAI.API_BASE: "https://ollama.com/v1"
 
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"

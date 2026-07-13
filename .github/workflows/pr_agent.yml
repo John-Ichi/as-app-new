@@ -12,8 +12,13 @@ jobs:
       pull-requests: write
       contents: read
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Run PR Agent Engine
-        uses: docker://pragent/pr-agent:latest
+        uses: Codium-ai/pr-agent-action@v2
         env:
           # Automatically triggers an inline review comment block on every new PR
           PR_AGENT.AUTOMATION.AUTO_REVIEW: "true"

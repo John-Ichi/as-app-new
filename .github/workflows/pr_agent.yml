@@ -22,8 +22,8 @@ jobs:
           GITHUB.USER_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
           
           # Sets up your target Ollama Cloud configuration
-          CONFIG.MODEL: "ollama/minimax-m3:cloud"
-          CONFIG.FALLBACK_MODELS: "['ollama/minimax-m3:cloud']"
-          CONFIG.CUSTOM_MODEL_MAX_TOKENS: "100000"
+          CONFIG.MODEL: "ollama/qwen3-coder:480b-cloud"
+          CONFIG.FALLBACK_MODELS: "['ollama/qwen3-coder:480b-cloud']"
+          CONFIG.CUSTOM_MODEL_MAX_TOKENS: "128000"
           OLLAMA.API_BASE: "https://ollama.com/v1"
           OLLAMA.API_KEY: ${{ secrets.OLLAMA_API_KEY }}

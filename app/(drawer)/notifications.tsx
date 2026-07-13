@@ -1,5 +1,5 @@
 import { styled } from "nativewind";
-import { Text } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -10,7 +10,11 @@ const Notifications = () => {
       edges={["bottom"]}
       className="flex-1 items-center justify-center bg-background"
     >
-      <Text>Notifications</Text>
+      <ScrollView>
+        <View>
+          <Text>Test for pull request.</Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

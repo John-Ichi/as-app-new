@@ -24,7 +24,7 @@ jobs:
           PR_AGENT.AUTOMATION.AUTO_REVIEW: "true"
 
           # Pulls your secure GitHub authentication token from the repository secrets
-          GITHUB.USER_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
 
           # Sets up your target Ollama Cloud configuration
           CONFIG.MODEL: "ollama/qwen3-coder:480b-cloud"

@@ -19,6 +19,9 @@ const Notifications = () => {
             <Text>Press me.</Text>
             <Text>OPENAI placeholder key added.</Text>
           </Pressable>
+          <Pressable>
+            <Text>Another pressable test.</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

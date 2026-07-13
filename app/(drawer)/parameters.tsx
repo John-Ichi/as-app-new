@@ -30,7 +30,6 @@ const Parameters = () => {
   const [showModal, setShowModal] = useState(false);
 
   const { width: screenWidth } = useWindowDimensions();
-  const availableWidth = Math.min(screenWidth - 48 - 32, 640);
   const colCount = 1 + allData.length;
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);
   const colWidth = Math.max(Math.min(naturalWidth, 90), 75);

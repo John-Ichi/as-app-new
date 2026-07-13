@@ -35,6 +35,7 @@ const DataTableModal = ({ visible, onClose }: Props) => {
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
+      onRequestClose={onClose}
     >
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-row items-center justify-between px-4 py-3">

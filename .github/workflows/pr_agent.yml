@@ -19,7 +19,7 @@ jobs:
           persist-credentials: false
 
       - name: Run PR Agent Engine
-        uses: the-pr-agent/pr-agent@487b40d6c4e09f7a77b819e917d2bb97f7bc4de1
+        uses: the-pr-agent/pr-agent@v0.39.0
         env:
           # Automatically triggers an inline review comment block on every new PR
           PR_AGENT.AUTOMATION.AUTO_REVIEW: "true"

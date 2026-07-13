@@ -1,0 +1,29 @@
+name: PR Agent Automated Review
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  pr_agent_job:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Run PR Agent Engine
+        uses: docker://pragent/pr-agent:latest
+        env:
+          # Automatically triggers an inline review comment block on every new PR
+          PR_AGENT.AUTOMATION.AUTO_REVIEW: "true"
+          
+          # Pulls your secure GitHub authentication token from the repository secrets
+          GITHUB.USER_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
+          
+          # Sets up your target Ollama Cloud configuration
+          CONFIG.MODEL: "ollama/minimax-m3:cloud"
+          CONFIG.FALLBACK_MODELS: "['ollama/minimax-m3:cloud']"
+          CONFIG.CUSTOM_MODEL_MAX_TOKENS: "100000"
+          OLLAMA.API_BASE: "https://ollama.com/v1"
+          OLLAMA.API_KEY: ${{ secrets.OLLAMA_API_KEY }}

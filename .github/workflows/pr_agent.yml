@@ -26,9 +26,11 @@ jobs:
 
           config.model: "ollama/qwen3-coder:480b-cloud"
           config.fallback_models: '["ollama/qwen3-coder:480b-cloud"]'
-          config.custom_model_max_tokens: "128000"
+          config.custom_model_max_tokens: "8000"
+          config.max_diff_tokens: "32000"
 
           OLLAMA.API_BASE: "https://ollama.com/v1"
 
-          PR_AGENT__AUTOMATION__AUTO_REVIEW: "true"
-          GITHUB_ACTION_CONFIG__HANDLE_SYNCHRONIZE_EVENTS: "true"
+          github_action_config.auto_review: "true"
+          github_action_config.auto_describe: "true"
+          github_action_config.handle_push_trigger: "true"

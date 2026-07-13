@@ -21,6 +21,7 @@ const Notifications = () => {
           </Pressable>
           <Pressable>
             <Text>Another pressable test.</Text>
+            {/** added a comment for pr-agent test */}
             <Text>Test pull request.</Text>
           </Pressable>
         </View>

@@ -201,6 +201,7 @@ const Parameters = () => {
             <Pressable>
               <View className="flex-row bg-white rounded-bg shadow-md shadow-slate-400/30 items-center px-4 pt-3 pb-2">
                 <Image source={icons.download} className="size-5 -mt-1" />
+                {/** coming soon */}
                 <Text className="text-md text-primary font-poppins-bold ml-2">
                   DOWNLOAD DATA SET
                 </Text>

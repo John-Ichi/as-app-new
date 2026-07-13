@@ -23,12 +23,13 @@ jobs:
         env:
           CONFIG__LOG_LEVEL: "DEBUG"
           PR_AGENT__AUTOMATION__AUTO_REVIEW: "true"
-
           GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
 
-          CONFIG__MODEL: "openai/qwen3-coder:480b-cloud"
-          CONFIG__FALLBACK_MODELS: "['openai/qwen3-coder:480b-cloud']"
+          CONFIG__MODEL: "ollama/qwen3-coder:480b-cloud"
+          CONFIG__FALLBACK_MODELS: "['ollama/qwen3-coder:480b-cloud']"
           CONFIG__CUSTOM_MODEL_MAX_TOKENS: "128000"
 
-          OPENAI_API_BASE: "https://ollama.com/v1"
-          OPENAI_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          OLLAMA_API_BASE: "https://ollama.com/v1"
+          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+
+          OPENAI__KEY: "placeholder"

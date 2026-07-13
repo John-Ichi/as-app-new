@@ -16,7 +16,8 @@ const Notifications = () => {
           <Text>Added for testing.</Text>
           <Text>Quick test for pr-agent.</Text>
           <Pressable onPress={() => {}}>
-            <Text>Press me</Text>
+            <Text>Press me.</Text>
+            <Text>OPENAI placeholder key added.</Text>
           </Pressable>
         </View>
       </ScrollView>

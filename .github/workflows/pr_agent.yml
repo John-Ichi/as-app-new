@@ -2,7 +2,7 @@ name: PR Agent Automated Review
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   pr_agent_job:
@@ -12,7 +12,7 @@ jobs:
       pull-requests: write
       contents: read
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -21,17 +21,14 @@ jobs:
       - name: Run PR Agent Engine
         uses: the-pr-agent/pr-agent@v0.39.0
         env:
-          CONFIG__LOG_LEVEL: "DEBUG"
-          PR_AGENT__AUTOMATION__AUTO_REVIEW: "true"
+          OPENAI_KEY: ${{ secrets.OLLAMA_API_KEY}}
           GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
 
+          config.model: "ollama/qwen3-coder:480b-cloud"
+          config.fallback_models: '["ollama/qwen3-coder:480b-cloud"]'
+          config.custom_model_max_tokens: "128000"
+
+          OLLAMA.API_BASE: "https://ollama.com/v1"
+
+          PR_AGENT__AUTOMATION__AUTO_REVIEW: "true"
           GITHUB_ACTION_CONFIG__HANDLE_SYNCHRONIZE_EVENTS: "true"
-
-          CONFIG__MODEL: "ollama/qwen3-coder:480b-cloud"
-          CONFIG__FALLBACK_MODELS: "['ollama/qwen3-coder:480b-cloud']"
-          CONFIG__CUSTOM_MODEL_MAX_TOKENS: "128000"
-
-          OLLAMA_API_BASE: "https://ollama.com/v1"
-          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
-
-          OPENAI_KEY: "placeholder"

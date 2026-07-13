@@ -17,10 +17,11 @@ const Notifications = () => {
           <Text>Quick test for pr-agent.</Text>
           <Pressable onPress={() => {}}>
             <Text>Press me.</Text>
-            <Text>OPENAI placeholder key added.</Text>
+            <Text>OLLAMA placeholder key added.</Text>
           </Pressable>
           <Pressable>
             <Text>Another pressable test.</Text>
+            <Text>Test pull request.</Text>
           </Pressable>
         </View>
       </ScrollView>

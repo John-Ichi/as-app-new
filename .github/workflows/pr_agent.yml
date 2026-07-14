@@ -17,9 +17,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
 
-          config.model: "ollama/qwen3.5:397b-cloud"
-          config.fallback_models: '["ollama/qwen3.5:397b-cloud"]'
-          config.custom_model_max_tokens: "8000"
+          config.model: "ollama/minimax-m3:cloud"
+          config.fallback_models: '["ollama/minimax-m3:cloud"]'
+          config.custom_model_max_tokens: "4000"
           config.max_diff_tokens: "32000"
 
           OLLAMA.API_KEY: ${{ secrets.OLLAMA_API_KEY}}

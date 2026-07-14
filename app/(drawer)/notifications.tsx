@@ -26,7 +26,9 @@ const Notifications = () => {
             {/** added a third comment for pr-agent test */}
             <Text>Test pull request.</Text>
           </Pressable>
-          <Pressable onPress={() => {}}></Pressable>
+          <Pressable onPress={() => {}}>
+            <Text>Minimax-m3 config added.</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

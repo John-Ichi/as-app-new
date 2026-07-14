@@ -23,8 +23,10 @@ const Notifications = () => {
             <Text>Another pressable test.</Text>
             {/** added a comment for pr-agent test */}
             {/** added another comment for pr-agent test */}
+            {/** added a third comment for pr-agent test */}
             <Text>Test pull request.</Text>
           </Pressable>
+          <Pressable onPress={() => {}}></Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

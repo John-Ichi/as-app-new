@@ -1,13 +1,16 @@
+import PressableScale from "@/components/PressableScale";
 import { DrawerRoutes } from "@/constants/data";
 import { icons } from "@/constants/icons";
+import { colors } from "@/constants/theme";
 import {
   DrawerContentScrollView,
+  DrawerItem,
   DrawerItemList,
 } from "@react-navigation/drawer";
 import { router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { styled } from "nativewind";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -15,7 +18,6 @@ const SafeAreaView = styled(RNSafeAreaView);
 export default function RootLayout() {
   return (
     <>
-      {/** add function onPress for icons.alert */}
       <Drawer
         screenOptions={{
           drawerActiveTintColor: "rgba(11, 61, 89, 0.44)",
@@ -26,30 +28,23 @@ export default function RootLayout() {
             </Text>
           ),
           headerRight: () => (
-            <Pressable
-              style={({ pressed }) =>
-                pressed ? { transform: [{ scale: 0.97 }] } : {}
-              }
+            <PressableScale
+              onPress={() => {
+                /** notification modal popup */
+              }}
+              style={{ borderRadius: 20, marginRight: 8, padding: 8 }}
+              pressedStyle={{ backgroundColor: colors.pressed }}
             >
-              <View className="size-10 pr-4 items-center justify-center">
-                <Image
-                  source={icons.alert}
-                  className="size-full"
-                  resizeMode="contain"
-                />
-              </View>
-            </Pressable>
+              <Image source={icons.alert} className="size-6" />
+            </PressableScale>
           ),
           headerTintColor: "#ffffff",
         }}
         drawerContent={(props) => (
           <View className="flex-1 bg-background">
             <SafeAreaView className="bg-primary" edges={["top", "bottom"]}>
-              <View className="flex-row items-center pt-4 px-1">
-                <Image
-                  source={icons.logo}
-                  style={{ width: 112, height: 112 }}
-                />
+              <View className="flex-row items-center pt-4 px-2">
+                <Image source={icons.logo} className="size-36" />
                 <View className="flex-1">
                   <Text className="text-xl text-white font-poppins-bold">
                     AmmoSense
@@ -65,22 +60,37 @@ export default function RootLayout() {
               contentContainerStyle={{ paddingTop: 12 }}
             >
               <DrawerItemList {...props} />
+              <DrawerItem
+                label={() => (
+                  <View className="flex-1">
+                    <Text className="text-lg text-secondary font-poppins-bold">
+                      Parameters
+                    </Text>
+                    <Text className="text-sm text-muted font-poppins-medium">
+                      Live metrics for water quality.
+                    </Text>
+                  </View>
+                )}
+                icon={() => <Image source={icons.setting} className="size-8" />}
+                onPress={() => router.push("/parameters")}
+              />
             </DrawerContentScrollView>
             <SafeAreaView edges={["bottom"]}>
               <View className="items-center justify-center mt-auto px-6 pb-6">
-                {/** add function onPress for Disconnect */}
-                <Pressable
+                <PressableScale
                   onPress={() => {
-                    router.replace("/onboarding");
+                    {
+                      /** replace later to disconnect from IoT device */
+                    }
+                    router.replace(
+                      "/onboarding",
+                    ); /** replace later to route to connection */
                   }}
-                  style={({ pressed }) =>
-                    pressed ? { transform: [{ scale: 0.97 }] } : {}
-                  }
                 >
                   <Text className="bg-primary rounded-bg shadow-md shadow-slate-400/30 text-lg text-white font-poppins-medium py-3 px-12 ">
                     Disconnect
                   </Text>
-                </Pressable>
+                </PressableScale>
               </View>
             </SafeAreaView>
           </View>

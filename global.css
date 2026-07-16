@@ -7,6 +7,7 @@
 @theme {
   --color-background: #e3ebff; /* define background color */
   --color-primary: #0b3d59; /* define primary color */
+  --color-primary-faded: #39627a; /* define faded primary color */
   --color-secondary: #10222c; /* define secondary color */
   --color-tertiary: rgba(11, 61, 89, 0.44); /* define tertiary color */
   --color-muted: #473f3f; /* define muted/gray color */

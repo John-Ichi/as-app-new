@@ -12,13 +12,19 @@ jobs:
       pull-requests: write
       contents: read
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
       - name: Run PR Agent
         uses: the-pr-agent/pr-agent@v0.39.0
         env:
           GITHUB_TOKEN: ${{ secrets.PR_AGENT_TOKEN }}
 
           config.model: "ollama/minimax-m3:cloud"
-          config.fallback_models: '["ollama/minimax-m3:cloud"]'
+          config.fallback_models: '["ollama/nemotron-3-ultra:cloud"]'
           config.custom_model_max_tokens: "4000"
           config.max_diff_tokens: "32000"
 

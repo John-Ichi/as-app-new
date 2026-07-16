@@ -1,7 +1,9 @@
+import { colors } from "@/constants/theme";
 import "@/global.css";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
+import { Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 void SplashScreen.preventAutoHideAsync();
@@ -26,7 +28,26 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontsError) return null;
   return (
     <GestureHandlerRootView className="flex-1">
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack
+        initialRouteName="onboarding"
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen
+          name="parameters"
+          options={{
+            headerShown: true,
+            title: "Water Quality Parameters",
+            headerStyle: { backgroundColor: colors.primary },
+            headerTitle: (props) => (
+              <Text className="text-lg text-white font-poppins-bold">
+                {props.children}
+              </Text>
+            ),
+            headerShadowVisible: false,
+            headerTintColor: colors.white,
+          }}
+        />
+      </Stack>
     </GestureHandlerRootView>
   );
 }

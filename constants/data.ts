@@ -16,13 +16,6 @@ export const DrawerRoutes = [
     icon: icons.graph,
   },
   {
-    name: "parameters",
-    title: "Parameters",
-    label: "Water Quality Parameters",
-    description: "Live metrics for water quality.",
-    icon: icons.setting,
-  },
-  {
     name: "notifications",
     title: "Notifications",
     label: "Alert Notifications",

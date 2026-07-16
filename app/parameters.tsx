@@ -1,13 +1,15 @@
+import DataTable from "@/components/DataTable";
 import DataTableModal from "@/components/DataTableModal";
+import PressableScale from "@/components/PressableScale";
 import { graphConfig } from "@/constants/graphs";
 import { icons } from "@/constants/icons";
 import { parameterMap } from "@/constants/parameters";
+import { colors } from "@/constants/theme";
 import { useGraphData } from "@/hooks/useGraphData";
 import { styled } from "nativewind";
 import { useState } from "react";
 import {
   Image,
-  Pressable,
   ScrollView,
   Text,
   View,
@@ -33,6 +35,12 @@ const Parameters = () => {
   const colCount = 1 + allData.length;
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);
   const colWidth = Math.max(Math.min(naturalWidth, 90), 75);
+
+  const tableColumns = allData.map((p) => graphConfig[p.id].shortLabel);
+  const tableRows = Array.from({ length: 24 }, (_, i) => ({
+    label: `${i.toString().padStart(2, "0")}:00`,
+    values: allData.map((p) => p.oneDay[i].value.toFixed(2)),
+  }));
 
   const ammonia = allData.find((d) => d.id === "ammonia");
   const points = ammonia?.oneDay;
@@ -98,7 +106,7 @@ const Parameters = () => {
             </Text>
             <View className="flex-row justify-between px-4 pb-4">
               <View
-                className={`w-[31%] ${maxBg} rounded-t-md shadow-sm shadow-slate-400/30 items-center p-2`}
+                className={`w-[31%] ${maxBg} rounded-t-md shadow-md shadow-slate-400/30 items-center p-2`}
               >
                 <Text className="text-md text-primary font-poppins-semibold">
                   MAX (24 HRS)
@@ -110,7 +118,7 @@ const Parameters = () => {
                   {maxLabel}
                 </Text>
               </View>
-              <View className="w-[31%] bg-white rounded-t-md shadow-sm shadow-slate-400/30 items-center p-2">
+              <View className="w-[31%] bg-white rounded-t-md shadow-md shadow-slate-400/30 items-center p-2">
                 <Text className="text-md text-primary font-poppins-semibold">
                   AVG (24 HRS)
                 </Text>
@@ -122,7 +130,7 @@ const Parameters = () => {
                 </Text>
               </View>
               <View
-                className={`w-[31%] ${minBg} rounded-t-md shadow-sm shadow-slate-400/30 items-center p-2`}
+                className={`w-[31%] ${minBg} rounded-t-md shadow-md shadow-slate-400/30 items-center p-2`}
               >
                 <Text className="text-md text-primary font-poppins-semibold">
                   MIN (24 HRS)
@@ -136,77 +144,39 @@ const Parameters = () => {
               </View>
             </View>
           </View>
-          <View className="flex-row items-end justify-between py-4">
+          <View className="flex-row items-center justify-between py-4">
             <Text className="text-lg text-primary font-poppins-bold">
               GATHERED DATA TABLE
             </Text>
-            <Pressable
+            <PressableScale
               onPress={() => setShowModal(true)}
-              style={({ pressed }) =>
-                pressed ? { transform: [{ scale: 0.97 }] } : {}
-              }
+              style={{ borderRadius: 20, paddingLeft: 8, paddingRight: 8 }}
+              pressedStyle={{ backgroundColor: colors.pressed }}
             >
               <Text className="text-md text-muted font-poppins-regular">
                 See More
               </Text>
-            </Pressable>
+            </PressableScale>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="border border-border rounded-sm overflow-hidden">
-              <View className="flex-row bg-primary">
-                <Text
-                  style={{ width: colWidth }}
-                  className="text-sm text-center text-white font-poppins-bold py-1.5"
-                >
-                  Time
-                </Text>
-                {allData.map((param) => (
-                  <Text
-                    key={param.id}
-                    style={{ width: colWidth }}
-                    className="text-sm text-center text-white font-poppins-bold py-1.5"
-                  >
-                    {graphConfig[param.id].shortLabel}
-                  </Text>
-                ))}
-              </View>
-              {Array.from({ length: 24 }, (_, i) => {
-                const hourLabel = `${i.toString().padStart(2, "0")}:00`;
-                return (
-                  <View
-                    key={i}
-                    className={`flex-row ${i % 2 === 0 ? "bg-white" : "bg-background"} border-b border-border`}
-                  >
-                    <Text
-                      style={{ width: colWidth }}
-                      className="text-sm text-center text-primary font-poppins-bold py-2"
-                    >
-                      {hourLabel}
-                    </Text>
-                    {allData.map((param) => (
-                      <Text
-                        key={param.id}
-                        style={{ width: colWidth }}
-                        className="text-sm text-center text-primary font-poppins-regular py-2"
-                      >
-                        {param.oneDay[i].value.toFixed(2)}
-                      </Text>
-                    ))}
-                  </View>
-                );
-              })}
-            </View>
-          </ScrollView>
+          <DataTable
+            columns={tableColumns}
+            rows={tableRows}
+            colWidth={colWidth}
+          />
+
           <View className="items-start py-4">
-            <Pressable>
+            <PressableScale
+              onPress={() => {
+                /** replace later to download data */
+              }}
+            >
               <View className="flex-row bg-white rounded-bg shadow-md shadow-slate-400/30 items-center px-4 pt-3 pb-2">
                 <Image source={icons.download} className="size-5 -mt-1" />
-                {/** coming soon */}
                 <Text className="text-md text-primary font-poppins-bold ml-2">
                   DOWNLOAD DATA SET
                 </Text>
               </View>
-            </Pressable>
+            </PressableScale>
           </View>
         </View>
       </ScrollView>

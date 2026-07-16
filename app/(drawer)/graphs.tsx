@@ -1,3 +1,4 @@
+import PressableScale from "@/components/PressableScale";
 import { graphConfig } from "@/constants/graphs";
 import {
   ParameterId,
@@ -8,13 +9,7 @@ import { colors } from "@/constants/theme";
 import { useGraphData } from "@/hooks/useGraphData";
 import { styled } from "nativewind";
 import { useCallback, useRef, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
@@ -52,18 +47,15 @@ const Graphs = () => {
       <View className="px-4 pt-6 pb-2 rounded-t-xl bg-background">
         <View className="w-full max-w-xl mx-auto flex-row gap-x-2">
           {parameterIds.map((id) => (
-            <Pressable
+            <PressableScale
               key={id}
               onPress={() => scrollToSection(id)}
-              style={({ pressed }) => [
-                { flex: 1 },
-                pressed ? { transform: [{ scale: 0.97 }] } : {},
-              ]}
+              style={{ flex: 1 }}
             >
               <Text className="px-1 py-1.5 bg-primary rounded-sm text-md text-center text-white font-poppins-medium">
                 {graphConfig[id].shortLabel}
               </Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </View>
       </View>
@@ -75,7 +67,7 @@ const Graphs = () => {
       >
         <View className="w-full max-w-xl mx-auto pt-4 px-4">
           {allData.length === 0 ? (
-            <Text className="text-sm text-center text-gray-500 mt-20 text-base font-poppins-regular">
+            <Text className="text-sm text-center text-muted mt-20 text-base font-poppins-regular">
               No data available. Please check your connection or try again
               later.
             </Text>
@@ -101,12 +93,9 @@ const Graphs = () => {
                       {metadata.label}
                     </Text>
                     <View className="flex-row gap-x-2">
-                      <Pressable
+                      <PressableScale
                         onPress={() =>
                           setTimeRanges((prev) => ({ ...prev, [id]: "oneDay" }))
-                        }
-                        style={({ pressed }) =>
-                          pressed ? { transform: [{ scale: 0.97 }] } : {}
                         }
                       >
                         <Text
@@ -114,16 +103,13 @@ const Graphs = () => {
                         >
                           1D
                         </Text>
-                      </Pressable>
-                      <Pressable
+                      </PressableScale>
+                      <PressableScale
                         onPress={() =>
                           setTimeRanges((prev) => ({
                             ...prev,
                             [id]: "sevenDay",
                           }))
-                        }
-                        style={({ pressed }) =>
-                          pressed ? { transform: [{ scale: 0.97 }] } : {}
                         }
                       >
                         <Text
@@ -131,7 +117,7 @@ const Graphs = () => {
                         >
                           7D
                         </Text>
-                      </Pressable>
+                      </PressableScale>
                     </View>
                   </View>
                   <View className="bg-white rounded-sm p-2 overflow-hidden">

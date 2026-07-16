@@ -1,6 +1,9 @@
+import ParameterCard from "@/components/ParameterCard";
+import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
-import { parameterMap } from "@/constants/parameters";
+import { colors } from "@/constants/theme";
 import { useWaterQualityData } from "@/hooks/useWaterQualityData";
+import { router } from "expo-router";
 import { styled } from "nativewind";
 import { Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -41,39 +44,16 @@ const Dashboard = () => {
             </Text>
           </View>
           <View className="mt-6 flex-row flex-wrap justify-between gap-y-5">
-            {readings.map((reading) => {
-              const metadata = parameterMap[reading.id];
-              const wide = metadata.fullWidth;
-              return (
-                <View
-                  key={reading.id}
-                  className={`${wide ? "w-full flex-row items-center" : "w-[48%]"} h-28 bg-white rounded-sm p-4 shadow-sm shadow-slate-400/30 justify-between`}
-                >
-                  <View className="flex-row gap-x-2 items-center">
-                    <Image
-                      source={metadata.icon}
-                      className="w-6 h-6"
-                      resizeMode="contain"
-                    />
-                    <Text
-                      className={`${wide ? "tracking-wide" : ""} text-md text-primary font-poppins-bold`}
-                    >
-                      {metadata.label}
-                    </Text>
-                  </View>
-                  <Text className="text-lg text-primary font-poppins-bold">
-                    {reading.value} {metadata.unit}
-                  </Text>
-                </View>
-              );
-            })}
-            <View className="w-full h-28 flex-row bg-white rounded-sm p-4 shadow-sm shadow-slate-400/30 items-center justify-between">
+            {readings.map((reading) => (
+              <ParameterCard
+                key={reading.id}
+                id={reading.id}
+                value={reading.value}
+              />
+            ))}
+            <View className="w-full flex-row bg-white rounded-sm shadow-md shadow-slate-400/30 items-center justify-between p-4 py-6">
               <View className="flex-row items-center gap-x-4">
-                <Image
-                  source={icons.warning}
-                  className="w-10 h-10"
-                  resizeMode="contain"
-                />
+                <Image source={icons.warning} className="size-10" />
                 <View>
                   <Text className="text-lg text-primary font-poppins-bold">
                     PREDICTIVE ALERT
@@ -89,11 +69,17 @@ const Dashboard = () => {
                   </Text>
                 </View>
               </View>
-              <View className="pr-2">
+              <PressableScale
+                onPress={() => {
+                  router.push("/parameters");
+                }}
+                style={{ borderRadius: 20, paddingLeft: 8, paddingRight: 8 }}
+                pressedStyle={{ backgroundColor: colors.pressed }}
+              >
                 <Text className="text-lg text-primary font-poppins-regular">
                   &gt;
                 </Text>
-              </View>
+              </PressableScale>
             </View>
           </View>
         </View>

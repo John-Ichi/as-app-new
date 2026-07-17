@@ -5,7 +5,7 @@ import {
   parameterIds,
   parameterMap,
 } from "@/constants/parameters";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { useGraphData } from "@/hooks/useGraphData";
 import { styled } from "nativewind";
 import { useCallback, useRef, useState } from "react";
@@ -66,8 +66,9 @@ const Graphs = () => {
         bounces={false}
       >
         <View className="w-full max-w-xl mx-auto pt-4 px-4">
-          {allData.length === 0 ? (
-            <Text className="text-sm text-center text-muted mt-20 text-base font-poppins-regular">
+          {allData.length ===
+          0 /** fallback when fetch API is implemented; no data fetched */ ? (
+            <Text className="text-sm text-center text-muted font-poppins-regular mt-20">
               No data available. Please check your connection or try again
               later.
             </Text>
@@ -120,7 +121,7 @@ const Graphs = () => {
                       </PressableScale>
                     </View>
                   </View>
-                  <View className="bg-white rounded-sm p-2 overflow-hidden">
+                  <ScrollView horizontal className="bg-white rounded-sm p-2">
                     <LineChart
                       data={chartData}
                       color={config.color}
@@ -139,19 +140,19 @@ const Graphs = () => {
                       showVerticalLines={false}
                       xAxisLabelTextStyle={{
                         color: colors.muted,
-                        fontFamily: "Poppins-Regular",
+                        fontFamily: fonts.regular,
                         fontSize: 8,
                       }}
                       xAxisLength={chartWidth}
                       yAxisTextStyle={{
                         color: colors.muted,
-                        fontFamily: "Poppins-Medium",
+                        fontFamily: fonts.medium,
                         fontSize: 10,
                       }}
                       roundToDigits={2}
-                      nestedScrollEnabled={true}
+                      nestedScrollEnabled
                     />
-                  </View>
+                  </ScrollView>
                 </View>
               );
             })

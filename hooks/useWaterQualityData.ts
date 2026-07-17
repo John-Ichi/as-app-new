@@ -1,12 +1,12 @@
 import { ParameterId, parameterMap } from "@/constants/parameters";
 
-export interface ParameterReading {
+interface ParameterReading {
   id: ParameterId;
   value: number;
   status: "normal" | "warning" | "critical" | undefined;
 }
 
-export interface WaterQualityData {
+interface WaterQualityData {
   overallStatus: "NORMAL" | "WARNING" | "CRITICAL";
   parameters: ParameterReading[];
   predictiveAlert: { risk: "LOW" | "MEDIUM" | "HIGH" };

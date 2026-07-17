@@ -26,7 +26,38 @@ const Dashboard = () => {
     overallStatus,
     parameters: readings,
     predictiveAlert,
+    isLoading,
+    error,
   } = useWaterQualityData();
+
+  if (error) {
+    return (
+      <SafeAreaView
+        edges={["bottom"]}
+        className="flex-1 bg-background items-center justify-center"
+      >
+        <Text className="text-lg text-danger font-poppins-bold">
+          Failed to load data.
+        </Text>
+        <Text className="text-md text-muted font-poppins-regular">
+          {error.message}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        edges={["bottom"]}
+        className="flex-1 bg-background items-center justify-center"
+      >
+        <Text className="text-lg text-muted font-poppins-regular">
+          Loading...
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
@@ -53,7 +84,10 @@ const Dashboard = () => {
             ))}
             <View className="w-full flex-row bg-white rounded-sm shadow-md shadow-slate-400/30 items-center justify-between p-4 py-6">
               <View className="flex-row items-center gap-x-4">
-                <Image source={icons.warning} className="size-10" />
+                <Image
+                  source={icons.warning}
+                  style={{ width: 40, height: 40 }}
+                />
                 <View>
                   <Text className="text-lg text-primary font-poppins-bold">
                     PREDICTIVE ALERT
@@ -75,6 +109,9 @@ const Dashboard = () => {
                 }}
                 style={{ borderRadius: 20, paddingLeft: 8, paddingRight: 8 }}
                 pressedStyle={{ backgroundColor: colors.pressed }}
+                accessibilityLabel="Parameters"
+                accessibilityRole="button"
+                hitSlop={{ top: 8, bottom: 8, left: 9, right: 9 }}
               >
                 <Text className="text-lg text-primary font-poppins-regular">
                   &gt;

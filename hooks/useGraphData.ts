@@ -1,11 +1,11 @@
 import { ParameterId, parameterIds } from "@/constants/parameters";
 
-export interface GraphDataPoint {
+interface GraphDataPoint {
   value: number;
   label?: string;
 }
 
-export interface ParameterGraphData {
+interface ParameterGraphData {
   id: ParameterId;
   oneDay: GraphDataPoint[];
   sevenDay: GraphDataPoint[];

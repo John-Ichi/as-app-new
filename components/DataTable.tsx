@@ -66,13 +66,19 @@ const DataTable = ({
   ));
 
   const table = (
-    <View className="border border-border rounded-sm overflow-hidden">
+    <View
+      className={`${nestedScroll ? "flex-1" : ""} border border-border rounded-sm overflow-hidden`}
+    >
       {header}
-      {nestedScroll ? <ScrollView>{body}</ScrollView> : body}
+      {nestedScroll ? <ScrollView className="flex-1">{body}</ScrollView> : body}
     </View>
   );
 
-  return <ScrollView horizontal>{table}</ScrollView>;
+  return (
+    <ScrollView horizontal className={nestedScroll ? "flex-1" : ""}>
+      {table}
+    </ScrollView>
+  );
 };
 
 export default DataTable;

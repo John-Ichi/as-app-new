@@ -1,5 +1,6 @@
+import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
-import { Link, Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { styled } from "nativewind";
 import { Image, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -8,29 +9,37 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 const Onboarding = () => {
   return (
-    <View className="flex-1 bg-background">
-      <View className="flex-1 items-center justify-center">
-        <Stack.Screen options={{ headerShown: false }} />
-        <Image
-          source={icons.logo}
-          style={{ height: "35%", aspectRatio: 1134 / 618 }}
-        />
-        <Text className="text-xl text-primary font-poppins-bold">
-          Welcome to AmmoSense!
-        </Text>
-        <Text className="text-lg text-muted font-poppins-semibold">
-          Predictive Water Quality Monitoring
-        </Text>
+    <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">
+      <Stack.Screen options={{ headerShown: false }} />
+      <View className="w-full max-w-xl mx-auto flex-1">
+        <View className="flex-1 items-center justify-center">
+          <Image source={icons.logo} style={{ height: 320, width: 320 }} />
+          <Text className="text-xl text-primary font-poppins-bold">
+            Welcome to AmmoSense!
+          </Text>
+          <Text className="text-lg text-muted font-poppins-semibold">
+            Predictive Water Quality Monitoring
+          </Text>
+        </View>
+        <View className="py-18 items-center">
+          <PressableScale
+            onPress={
+              () =>
+                router.push(
+                  "/(drawer)",
+                ) /** replace later to connect to IoT device */
+            }
+            className="w-[66%]"
+          >
+            <View className="bg-primary rounded-xl p-4">
+              <Text className="text-white text-center text-lg font-poppins-semibold">
+                Continue
+              </Text>
+            </View>
+          </PressableScale>
+        </View>
       </View>
-      <SafeAreaView edges={["bottom"]} className="pb-18 items-center">
-        <Link
-          href="/(drawer)"
-          className="w-3/4 p-4 rounded-bg bg-primary text-center text-white font-poppins-semibold"
-        >
-          Continue
-        </Link>
-      </SafeAreaView>
-    </View>
+    </SafeAreaView>
   );
 };
 

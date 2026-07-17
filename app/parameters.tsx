@@ -36,10 +36,12 @@ const Parameters = () => {
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);
   const colWidth = Math.max(Math.min(naturalWidth, 90), 75);
 
-  const tableColumns = allData.map((p) => graphConfig[p.id].shortLabel);
+  const tableColumns = allData.map(
+    (p) => graphConfig[p.id]?.shortLabel ?? p.id,
+  );
   const tableRows = Array.from({ length: 24 }, (_, i) => ({
     label: `${i.toString().padStart(2, "0")}:00`,
-    values: allData.map((p) => p.oneDay[i].value.toFixed(2)),
+    values: allData.map((p) => p.oneDay?.[i]?.value?.toFixed(2) ?? "-"),
   }));
 
   const ammonia = allData.find((d) => d.id === "ammonia");
@@ -100,13 +102,13 @@ const Parameters = () => {
         contentContainerClassName="pb-10"
       >
         <View className="w-full max-w-xl mx-auto pt-4 px-4">
-          <View className="bg-white rounded-t-md shadow-md shadow-slate-400/30">
+          <View className="bg-white rounded-t-bg shadow-md shadow-slate-400/30">
             <Text className="text-xl text-center text-primary font-poppins-bold p-2">
               AMMONIA, NH₃
             </Text>
             <View className="flex-row justify-between px-4 pb-4">
               <View
-                className={`w-[31%] ${maxBg} rounded-t-md shadow-md shadow-slate-400/30 items-center p-2`}
+                className={`w-[31%] ${maxBg} rounded-t-bg shadow-md shadow-slate-400/30 items-center p-2`}
               >
                 <Text className="text-md text-primary font-poppins-semibold">
                   MAX (24 HRS)
@@ -118,7 +120,7 @@ const Parameters = () => {
                   {maxLabel}
                 </Text>
               </View>
-              <View className="w-[31%] bg-white rounded-t-md shadow-md shadow-slate-400/30 items-center p-2">
+              <View className="w-[31%] bg-white rounded-t-bg shadow-md shadow-slate-400/30 items-center p-2">
                 <Text className="text-md text-primary font-poppins-semibold">
                   AVG (24 HRS)
                 </Text>
@@ -130,7 +132,7 @@ const Parameters = () => {
                 </Text>
               </View>
               <View
-                className={`w-[31%] ${minBg} rounded-t-md shadow-md shadow-slate-400/30 items-center p-2`}
+                className={`w-[31%] ${minBg} rounded-t-bg shadow-md shadow-slate-400/30 items-center p-2`}
               >
                 <Text className="text-md text-primary font-poppins-semibold">
                   MIN (24 HRS)
@@ -171,7 +173,10 @@ const Parameters = () => {
               }}
             >
               <View className="flex-row bg-white rounded-bg shadow-md shadow-slate-400/30 items-center px-4 pt-3 pb-2">
-                <Image source={icons.download} className="size-5 -mt-1" />
+                <Image
+                  source={icons.download}
+                  style={{ width: 20, height: 20, marginTop: -4 }}
+                />
                 <Text className="text-md text-primary font-poppins-bold ml-2">
                   DOWNLOAD DATA SET
                 </Text>

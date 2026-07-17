@@ -20,12 +20,12 @@ const PressableScale = ({
 }: PressableScaleProps) => (
   <Pressable
     style={(state: PressableStateCallbackType) => [
+      typeof style === "function" ? style(state) : style,
       state.pressed && {
         transform: [{ scale }],
         opacity,
         ...pressedStyle,
       },
-      typeof style === "function" ? style(state) : style,
     ]}
     {...props}
   />

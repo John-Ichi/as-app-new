@@ -27,7 +27,7 @@ const DataTableModal = ({ visible, onClose }: Props) => {
 
   const columns = parameterIds.map((id) => graphConfig[id].shortLabel);
   const rows = Array.from({ length: 48 }, (_, i) => ({
-    label: allData[0].points[i].label ?? "",
+    label: allData[0]?.points[i]?.label ?? "",
     values: allData.map(({ id, points }) => points[i].value.toFixed(2)),
   }));
 
@@ -47,6 +47,9 @@ const DataTableModal = ({ visible, onClose }: Props) => {
             onPress={onClose}
             style={{ borderRadius: 20, paddingLeft: 8, paddingRight: 8 }}
             pressedStyle={{ backgroundColor: colors.pressed }}
+            accessibilityLabel="Close"
+            accessibilityRole="button"
+            hitSlop={10}
           >
             <Text className="text-xl text-muted font-poppins-regular">
               {"\u00D7"}

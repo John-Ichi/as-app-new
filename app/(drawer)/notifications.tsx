@@ -21,7 +21,10 @@ const Notifications = () => {
         <ScrollView className="bg-background" contentContainerClassName="pb-10">
           <View className="flex-col bg-background p-6 gap-y-6">
             <View className="flex-row bg-danger-light rounded-bg shadow-md shadow-slate-400/30 items-start p-4">
-              <Image source={icons.criticalAlert} className="size-10" />
+              <Image
+                source={icons.criticalAlert}
+                style={{ width: 40, height: 40 }}
+              />
               <View className="flex-1 ml-2">
                 <Text className="text-lg text-primary font-poppins-bold">
                   AMMONIA SPIKE
@@ -41,10 +44,13 @@ const Notifications = () => {
               </View>
             </View>
             <View className="flex-row bg-warning-light rounded-bg shadow-md shadow-slate-400/30 items-start p-4">
-              <Image source={icons.warningAlert} className="size-10" />
+              <Image
+                source={icons.warningAlert}
+                style={{ width: 40, height: 40 }}
+              />
               <View className="flex-1 ml-2">
                 <Text className="text-lg text-primary font-poppins-bold">
-                  TEMP FLUCTUATONS
+                  TEMP FLUCTUATIONS
                 </Text>
                 <Text className="text-md text-primary font-poppins-medium">
                   May 07, 2026 9:43 AM

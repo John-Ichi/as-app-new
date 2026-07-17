@@ -31,5 +31,3 @@ export const icons = {
   criticalAlert,
   warningAlert,
 } as const;
-
-export type IconKey = keyof typeof icons;

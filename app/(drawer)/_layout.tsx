@@ -16,6 +16,7 @@ export default function RootLayout() {
     <Drawer
       screenOptions={{
         drawerActiveTintColor: colors.tertiary,
+        drawerItemStyle: { marginVertical: 4 },
         headerStyle: { backgroundColor: colors.primary },
         headerTitleStyle: { fontFamily: fonts.bold, fontSize: fontSizes.large },
         headerTintColor: colors.white,
@@ -50,16 +51,17 @@ export default function RootLayout() {
               </View>
             </View>
           </View>
-          <ScrollView className="flex-1 p-4">
+          <ScrollView className="flex-1 px-4 py-1">
             <DrawerItemList {...props} />
             <DrawerItem
+              style={{ marginVertical: 4 }}
               label={() => (
                 <View className="flex-1">
                   <Text className="text-lg text-secondary font-poppins-bold">
                     Parameters
                   </Text>
                   <Text className="text-sm text-muted font-poppins-medium">
-                    Live metrics for water quality.
+                    Real-time metrics for water quality parameters.
                   </Text>
                 </View>
               )}

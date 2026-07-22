@@ -1,6 +1,8 @@
 import ParameterCard from "@/components/ParameterCard";
 import PressableScale from "@/components/PressableScale";
+import { ErrorState, LoadingState } from "@/components/StateDisplay";
 import { icons } from "@/constants/icons";
+import { overallStatusBg, riskTextColor } from "@/constants/status";
 import { colors } from "@/constants/theme";
 import { useWaterQualityData } from "@/hooks/useWaterQualityData";
 import { router } from "expo-router";
@@ -9,17 +11,6 @@ import { Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
-const statusColor: Record<"NORMAL" | "WARNING" | "CRITICAL", string> = {
-  NORMAL: "bg-success",
-  WARNING: "bg-warning",
-  CRITICAL: "bg-danger",
-};
-
-const riskColor: Record<"LOW" | "MEDIUM" | "HIGH", string> = {
-  LOW: "text-success",
-  MEDIUM: "text-warning",
-  HIGH: "text-danger",
-};
 
 const Dashboard = () => {
   const {
@@ -30,34 +21,8 @@ const Dashboard = () => {
     error,
   } = useWaterQualityData();
 
-  if (error) {
-    return (
-      <SafeAreaView
-        edges={["bottom"]}
-        className="flex-1 bg-background items-center justify-center"
-      >
-        <Text className="text-lg text-danger font-poppins-bold">
-          Failed to load data.
-        </Text>
-        <Text className="text-md text-muted font-poppins-regular">
-          {error.message}
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <SafeAreaView
-        edges={["bottom"]}
-        className="flex-1 bg-background items-center justify-center"
-      >
-        <Text className="text-lg text-muted font-poppins-regular">
-          Loading...
-        </Text>
-      </SafeAreaView>
-    );
-  }
+  if (error) return <ErrorState message={error.message} />;
+  if (isLoading) return <LoadingState />;
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
@@ -65,7 +30,7 @@ const Dashboard = () => {
         <View className="w-full h-16 bg-primary rounded-b-xl"></View>
         <View className="w-full max-w-xl mx-auto px-4">
           <View
-            className={`${statusColor[overallStatus]} -mt-14 mx-12 py-4 rounded-xl shadow-md shadow-slate-400/30 items-center justify-center`}
+            className={`${overallStatusBg[overallStatus]} -mt-14 mx-12 py-4 rounded-xl shadow-md shadow-slate-400/30 items-center justify-center`}
           >
             <Text className="text-lg text-white font-poppins-medium">
               OVERALL AMMONIA STATUS
@@ -95,7 +60,7 @@ const Dashboard = () => {
                   <Text className="text-md text-primary font-poppins-regular">
                     Risk:{" "}
                     <Text
-                      className={`${riskColor[predictiveAlert.risk]} font-poppins-extrabold`}
+                      className={`${riskTextColor[predictiveAlert.risk]} font-poppins-extrabold`}
                     >
                       {predictiveAlert.risk}
                     </Text>{" "}

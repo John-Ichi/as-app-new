@@ -1,9 +1,15 @@
 import DataTable from "@/components/DataTable";
 import DataTableModal from "@/components/DataTableModal";
 import PressableScale from "@/components/PressableScale";
+import StatCard from "@/components/StatCard";
 import { graphConfig } from "@/constants/graphs";
 import { icons } from "@/constants/icons";
-import { parameterMap } from "@/constants/parameters";
+import {
+  classify,
+  parameterStatusBg,
+  parameterStatusLabel,
+  parameterStatusTextColor,
+} from "@/constants/status";
 import { colors } from "@/constants/theme";
 import { useGraphData } from "@/hooks/useGraphData";
 import { styled } from "nativewind";
@@ -18,14 +24,6 @@ import {
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
-
-function ammoniaStatus(value: number) {
-  const t = parameterMap.ammonia.threshold;
-  if (!t) return "normal";
-  if (value > t.critical) return "critical";
-  if (value > t.warning) return "warning";
-  return "normal";
-}
 
 const Parameters = () => {
   const allData = useGraphData();
@@ -55,45 +53,27 @@ const Parameters = () => {
     ? points.reduce((s, p) => s + p.value, 0) / points.length
     : 0;
 
-  const statusTextColor: Record<string, string> = {
-    critical: "text-danger",
-    warning: "text-warning",
-    normal: "text-success",
-  };
-
-  const statusBgColor: Record<string, string> = {
-    critical: "bg-danger-light",
-    warning: "bg-warning-light",
-    normal: "bg-success-light",
-  };
-
-  const statusLabel: Record<string, string> = {
-    critical: "CRITICAL",
-    warning: "WARNING",
-    normal: "SAFE",
-  };
-
-  const maxStatus = ammoniaStatus(maxVal);
-  const maxBg = statusBgColor[maxStatus];
-  const maxTextColor = statusTextColor[maxStatus];
+  const maxStatus = classify("ammonia", maxVal)!;
+  const maxBg = parameterStatusBg[maxStatus];
+  const maxTextColor = parameterStatusTextColor[maxStatus];
   const maxLabel =
     maxPoint?.label ??
     (maxPoint !== undefined
       ? `${points!.indexOf(maxPoint).toString().padStart(2, "0")}:00`
       : "N/A");
 
-  const minStatus = ammoniaStatus(minVal);
-  const minTextColor = statusTextColor[minStatus];
-  const minBg = statusBgColor[minStatus];
+  const minStatus = classify("ammonia", minVal)!;
+  const minTextColor = parameterStatusTextColor[minStatus];
+  const minBg = parameterStatusBg[minStatus];
   const minLabel =
     minPoint?.label ??
     (minPoint !== undefined
       ? `${points!.indexOf(minPoint).toString().padStart(2, "0")}:00`
       : "N/A");
 
-  const avgStatus = ammoniaStatus(avgVal);
-  const avgLabel = statusLabel[avgStatus];
-  const avgTextColor = statusTextColor[avgStatus];
+  const avgStatus = classify("ammonia", avgVal)!;
+  const avgLabel = parameterStatusLabel[avgStatus];
+  const avgTextColor = parameterStatusTextColor[avgStatus];
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
@@ -107,43 +87,26 @@ const Parameters = () => {
               AMMONIA, NH₃
             </Text>
             <View className="flex-row justify-between px-4 pb-4">
-              <View
-                className={`w-[31%] ${maxBg} rounded-t-bg shadow-md shadow-slate-400/30 items-center p-2`}
-              >
-                <Text className="text-md text-primary font-poppins-semibold">
-                  MAX (24 HRS)
-                </Text>
-                <Text className={`text-lg ${maxTextColor} font-poppins-bold`}>
-                  {maxVal.toFixed(2)} PPM
-                </Text>
-                <Text className="text-md text-muted font-poppins-regular">
-                  {maxLabel}
-                </Text>
-              </View>
-              <View className="w-[31%] bg-white rounded-t-bg shadow-md shadow-slate-400/30 items-center p-2">
-                <Text className="text-md text-primary font-poppins-semibold">
-                  AVG (24 HRS)
-                </Text>
-                <Text className="text-lg text-primary font-poppins-bold">
-                  {avgVal.toFixed(2)} PPM
-                </Text>
-                <Text className={`text-md ${avgTextColor} font-poppins-bold`}>
-                  {avgLabel}
-                </Text>
-              </View>
-              <View
-                className={`w-[31%] ${minBg} rounded-t-bg shadow-md shadow-slate-400/30 items-center p-2`}
-              >
-                <Text className="text-md text-primary font-poppins-semibold">
-                  MIN (24 HRS)
-                </Text>
-                <Text className={`text-lg ${minTextColor} font-poppins-bold`}>
-                  {minVal.toFixed(2)} PPM
-                </Text>
-                <Text className="text-md text-muted font-poppins-regular">
-                  {minLabel}
-                </Text>
-              </View>
+              <StatCard
+                label="MAX (24 HRS)"
+                value={`${maxVal.toFixed(2)} PPM`}
+                subLabel={maxLabel}
+                textColor={maxTextColor}
+                bgColor={maxBg}
+              />
+              <StatCard
+                label="AVG (24 HRS)"
+                value={`${avgVal.toFixed(2)} PPM`}
+                subLabel={avgLabel}
+                subLabelClassName={`text-md ${avgTextColor} font-poppins-bold`}
+              />
+              <StatCard
+                label="MIN (24 HRS)"
+                value={`${minVal.toFixed(2)} PPM`}
+                subLabel={minLabel}
+                textColor={minTextColor}
+                bgColor={minBg}
+              />
             </View>
           </View>
           <View className="flex-row items-center justify-between py-4">

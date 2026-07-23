@@ -15,11 +15,4 @@ export const DrawerRoutes = [
     description: "Real-time water quality trend visualization.",
     icon: icons.graph,
   },
-  {
-    name: "notifications",
-    title: "Notifications",
-    label: "Alert Notifications",
-    description: "Instant notifications for ammonia risks.",
-    icon: icons.bell,
-  },
 ];

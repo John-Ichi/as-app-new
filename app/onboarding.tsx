@@ -26,7 +26,7 @@ const Onboarding = () => {
             onPress={
               () =>
                 router.push(
-                  "/(drawer)",
+                  "/device-select",
                 ) /** replace later to connect to IoT device */
             }
             className="w-[66%]"

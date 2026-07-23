@@ -1,25 +1,18 @@
-import { ParameterId, parameterMap } from "@/constants/parameters";
+import { ParameterId } from "@/constants/parameters";
+import { classify, ParameterStatus } from "@/constants/status";
 
-export interface ParameterReading {
+interface ParameterReading {
   id: ParameterId;
   value: number;
-  status: "normal" | "warning" | "critical" | undefined;
+  status: ParameterStatus | undefined;
 }
 
-export interface WaterQualityData {
+interface WaterQualityData {
   overallStatus: "NORMAL" | "WARNING" | "CRITICAL";
   parameters: ParameterReading[];
   predictiveAlert: { risk: "LOW" | "MEDIUM" | "HIGH" };
   isLoading: boolean;
   error: Error | null;
-}
-
-function classify(id: ParameterId, value: number): ParameterReading["status"] {
-  const metadata = parameterMap[id];
-  if (!metadata?.threshold) return undefined;
-  if (value > metadata.threshold.critical) return "critical";
-  if (value > metadata.threshold.warning) return "warning";
-  return "normal";
 }
 
 function getOverallStatus(

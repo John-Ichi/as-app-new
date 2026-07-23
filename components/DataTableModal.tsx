@@ -1,17 +1,12 @@
+import DataTable from "@/components/DataTable";
+import PressableScale from "@/components/PressableScale";
 import { graphConfig } from "@/constants/graphs";
 import { parameterIds } from "@/constants/parameters";
+import { colors } from "@/constants/theme";
 import { generateHalfHourData } from "@/hooks/useGraphData";
 import { styled } from "nativewind";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Modal, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
-
 const SafeAreaView = styled(RNSafeAreaView);
 
 interface Props {
@@ -30,6 +25,12 @@ const DataTableModal = ({ visible, onClose }: Props) => {
     points: generateHalfHourData(id),
   }));
 
+  const columns = parameterIds.map((id) => graphConfig[id].shortLabel);
+  const rows = Array.from({ length: 48 }, (_, i) => ({
+    label: allData[0]?.points[i]?.label ?? "",
+    values: allData.map(({ id, points }) => points[i].value.toFixed(2)),
+  }));
+
   return (
     <Modal
       visible={visible}
@@ -42,66 +43,26 @@ const DataTableModal = ({ visible, onClose }: Props) => {
           <Text className="text-lg text-primary font-poppins-bold">
             GATHERED DATA
           </Text>
-          <Pressable
+          <PressableScale
             onPress={onClose}
-            style={({ pressed }) =>
-              pressed ? { transform: [{ scale: 0.97 }] } : {}
-            }
+            style={{ borderRadius: 20, paddingLeft: 8, paddingRight: 8 }}
+            pressedStyle={{ backgroundColor: colors.pressed }}
+            accessibilityLabel="Close"
+            accessibilityRole="button"
+            hitSlop={10}
           >
             <Text className="text-xl text-muted font-poppins-regular">
               {"\u00D7"}
             </Text>
-          </Pressable>
+          </PressableScale>
         </View>
         <View className="flex-1 w-full max-w-xl mx-auto px-4 pb-10">
-          <ScrollView horizontal>
-            <View className="border border-border rounded-sm overflow-hidden">
-              <View className="flex-row bg-primary">
-                <Text
-                  style={{ width: colWidth }}
-                  className="text-sm text-center text-white font-poppins-bold py-2"
-                >
-                  Time
-                </Text>
-                {allData.map(({ id }) => (
-                  <Text
-                    key={id}
-                    style={{ width: colWidth }}
-                    className="text-sm text-center text-white font-poppins-bold py-2"
-                  >
-                    {graphConfig[id].shortLabel}
-                  </Text>
-                ))}
-              </View>
-              <ScrollView>
-                {Array.from({ length: 48 }, (_, i) => {
-                  const label = allData[0].points[i].label;
-                  return (
-                    <View
-                      key={i}
-                      className={`flex-row ${i % 2 === 0 ? "bg-white" : "bg-background"} border-b border-border`}
-                    >
-                      <Text
-                        style={{ width: colWidth }}
-                        className="text-sm text-center text-primary font-poppins-bold py-2.5"
-                      >
-                        {label}
-                      </Text>
-                      {allData.map(({ id, points }) => (
-                        <Text
-                          key={id}
-                          style={{ width: colWidth }}
-                          className="text-sm text-center text-primary font-poppins-regular py-2.5"
-                        >
-                          {points[i].value.toFixed(2)}
-                        </Text>
-                      ))}
-                    </View>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </ScrollView>
+          <DataTable
+            columns={columns}
+            rows={rows}
+            colWidth={colWidth}
+            nestedScroll
+          />
         </View>
       </SafeAreaView>
     </Modal>

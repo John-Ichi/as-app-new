@@ -42,7 +42,7 @@ export const parameters: ParameterMetaData[] = [
   },
   {
     id: "dissolvedOxygen",
-    label: "DISSOLVED OXYGEN",
+    label: "DO",
     unit: "mg/L",
     icon: icons.dissolvedOxygen,
   },

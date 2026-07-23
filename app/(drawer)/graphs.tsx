@@ -1,21 +1,12 @@
+import ParameterChart from "@/components/ParameterChart";
+import PressableScale from "@/components/PressableScale";
 import { graphConfig } from "@/constants/graphs";
-import {
-  ParameterId,
-  parameterIds,
-  parameterMap,
-} from "@/constants/parameters";
-import { colors } from "@/constants/theme";
+import type { ParameterId } from "@/constants/parameters";
+import { parameterIds, parameterMap } from "@/constants/parameters";
 import { useGraphData } from "@/hooks/useGraphData";
 import { styled } from "nativewind";
 import { useCallback, useRef, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
-import { LineChart } from "react-native-gifted-charts";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -47,23 +38,32 @@ const Graphs = () => {
     }
   }, []);
 
+  if (allData.length === 0) {
+    return (
+      <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
+        <View className="flex-1 bg-background rounded-t-xl items-center justify-center">
+          <Text className="text-sm text-center text-muted font-poppins-regular">
+            No data available. Please check your connection or try again later.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
-      <View className="px-4 pt-6 pb-2 rounded-t-xl bg-background">
-        <View className="w-full max-w-xl mx-auto flex-row gap-x-2">
+      <View className="bg-background rounded-t-xl px-4 pt-6 pb-2">
+        <View className="w-full max-w-xl flex-row mx-auto gap-x-2">
           {parameterIds.map((id) => (
-            <Pressable
+            <PressableScale
               key={id}
               onPress={() => scrollToSection(id)}
-              style={({ pressed }) => [
-                { flex: 1 },
-                pressed ? { transform: [{ scale: 0.97 }] } : {},
-              ]}
+              style={{ flex: 1 }}
             >
-              <Text className="px-1 py-1.5 bg-primary rounded-sm text-md text-center text-white font-poppins-medium">
+              <Text className="bg-primary rounded-sm text-md text-center text-white font-poppins-medium px-1 py-1.5">
                 {graphConfig[id].shortLabel}
               </Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </View>
       </View>
@@ -74,102 +74,33 @@ const Graphs = () => {
         bounces={false}
       >
         <View className="w-full max-w-xl mx-auto pt-4 px-4">
-          {allData.length === 0 ? (
-            <Text className="text-sm text-center text-gray-500 mt-20 text-base font-poppins-regular">
-              No data available. Please check your connection or try again
-              later.
-            </Text>
-          ) : (
-            allData.map((paramData) => {
-              const id = paramData.id;
-              const config = graphConfig[id];
-              const metadata = parameterMap[id];
-              const range = timeRanges[id];
-              const chartData =
-                range === "oneDay" ? paramData.oneDay : paramData.sevenDay;
+          {allData.map((paramData) => {
+            const id = paramData.id;
+            const config = graphConfig[id];
+            const range = timeRanges[id];
+            const chartData =
+              range === "oneDay" ? paramData.oneDay : paramData.sevenDay;
 
-              return (
-                <View
-                  key={id}
-                  onLayout={(e) => {
-                    sectionPositions.current[id] = e.nativeEvent.layout.y;
-                  }}
-                  className="mb-8"
-                >
-                  <View className="flex-row items-center justify-between mb-3">
-                    <Text className="text-lg text-primary font-poppins-bold">
-                      {metadata.label}
-                    </Text>
-                    <View className="flex-row gap-x-2">
-                      <Pressable
-                        onPress={() =>
-                          setTimeRanges((prev) => ({ ...prev, [id]: "oneDay" }))
-                        }
-                        style={({ pressed }) =>
-                          pressed ? { transform: [{ scale: 0.97 }] } : {}
-                        }
-                      >
-                        <Text
-                          className={`px-2.5 py-0.5 rounded-sm text-md font-poppins-bold ${range === "oneDay" ? "bg-primary text-white" : "bg-white text-primary"}`}
-                        >
-                          1D
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        onPress={() =>
-                          setTimeRanges((prev) => ({
-                            ...prev,
-                            [id]: "sevenDay",
-                          }))
-                        }
-                        style={({ pressed }) =>
-                          pressed ? { transform: [{ scale: 0.97 }] } : {}
-                        }
-                      >
-                        <Text
-                          className={`px-2.5 py-0.5 rounded-sm text-md font-poppins-bold ${range === "sevenDay" ? "bg-primary text-white" : "bg-white text-primary"}`}
-                        >
-                          7D
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                  <View className="bg-white rounded-sm p-2 overflow-hidden">
-                    <LineChart
-                      data={chartData}
-                      color={config.color}
-                      thickness={2.5}
-                      curved
-                      maxValue={config.yAxisMax}
-                      yAxisOffset={config.yAxisMin}
-                      noOfSections={5}
-                      spacing={60}
-                      hideDataPoints={range === "oneDay"}
-                      dataPointsRadius={4}
-                      dataPointsColor={config.color}
-                      height={220}
-                      width={chartWidth}
-                      rulesColor="rgba(0,0,0,0.06)"
-                      showVerticalLines={false}
-                      xAxisLabelTextStyle={{
-                        color: colors.muted,
-                        fontFamily: "Poppins-Regular",
-                        fontSize: 8,
-                      }}
-                      xAxisLength={chartWidth}
-                      yAxisTextStyle={{
-                        color: colors.muted,
-                        fontFamily: "Poppins-Medium",
-                        fontSize: 10,
-                      }}
-                      roundToDigits={2}
-                      nestedScrollEnabled={true}
-                    />
-                  </View>
-                </View>
-              );
-            })
-          )}
+            return (
+              <ParameterChart
+                key={id}
+                id={id}
+                data={chartData}
+                label={parameterMap[id].label}
+                color={config.color}
+                yAxisMin={config.yAxisMin}
+                yAxisMax={config.yAxisMax}
+                chartWidth={chartWidth}
+                range={range}
+                onRangeChange={(id, range) =>
+                  setTimeRanges((prev) => ({ ...prev, [id]: range }))
+                }
+                onLayout={(y) => {
+                  sectionPositions.current[id] = y;
+                }}
+              />
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>

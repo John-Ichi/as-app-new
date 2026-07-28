@@ -1,12 +1,16 @@
 import DataTable from "@/components/DataTable";
 import PressableScale from "@/components/PressableScale";
 import { graphConfig } from "@/constants/graphs";
-import { parameterIds } from "@/constants/parameters";
+import { ParameterId, parameterIds } from "@/constants/parameters";
 import { colors } from "@/constants/theme";
-import { generateHalfHourData } from "@/hooks/useGraphData";
+import { useDevice } from "@/contexts/DeviceContext";
+import { getHalfHourData } from "@/services/firebase/graphs";
+import type { GraphDataPoint } from "@/services/types";
 import { styled } from "nativewind";
+import { useEffect, useState } from "react";
 import { Modal, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+
 const SafeAreaView = styled(RNSafeAreaView);
 
 interface Props {
@@ -16,14 +20,29 @@ interface Props {
 
 const DataTableModal = ({ visible, onClose }: Props) => {
   const { width: screenWidth } = useWindowDimensions();
+  const { selectedDevice } = useDevice();
+  const [allData, setAllData] = useState<
+    { id: ParameterId; points: GraphDataPoint[] }[]
+  >([]);
+
+  useEffect(() => {
+    if (!selectedDevice) return;
+    const deviceId = selectedDevice.id;
+    async function fetchData() {
+      const results = await Promise.all(
+        parameterIds.map(async (id) => ({
+          id,
+          points: await getHalfHourData(deviceId, id),
+        })),
+      );
+      setAllData(results);
+    }
+    fetchData();
+  }, [selectedDevice, visible]);
+
   const colCount = 1 + parameterIds.length;
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);
   const colWidth = Math.max(Math.min(naturalWidth, 90), 75);
-
-  const allData = parameterIds.map((id) => ({
-    id,
-    points: generateHalfHourData(id),
-  }));
 
   const columns = parameterIds.map((id) => graphConfig[id].shortLabel);
   const rows = Array.from({ length: 48 }, (_, i) => ({

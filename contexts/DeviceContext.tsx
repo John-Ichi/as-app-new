@@ -1,10 +1,5 @@
+import type { Device } from "@/services/types";
 import { createContext, type ReactNode, useContext, useState } from "react";
-
-export interface Device {
-  id: string;
-  name: string;
-  location: string;
-}
 
 interface DeviceContextValue {
   selectedDevice: Device | null;

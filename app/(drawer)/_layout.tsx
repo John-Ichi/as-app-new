@@ -5,7 +5,7 @@ import { colors, fonts, fontSizes } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { DrawerItem, DrawerItemList } from "@react-navigation/drawer";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { styled } from "nativewind";
 import { Image, ScrollView, Text, View } from "react-native";
@@ -16,9 +16,12 @@ import {
 
 const SafeAreaView = styled(RNSafeAreaView);
 
-export default function RootLayout() {
+export default function DrawerLayout() {
+  const { selectedDevice } = useDevice();
+  if (!selectedDevice) return <Redirect href="/onboarding" />;
+
   const insets = useSafeAreaInsets();
-  const notifications = useNotifications();
+  const { data: notifications } = useNotifications();
   const { selectDevice } = useDevice();
 
   return (

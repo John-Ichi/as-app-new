@@ -1,23 +1,27 @@
-export interface Notification {
-  id: string;
-  type: "critical" | "warning";
-  title: string;
-  date: string;
-}
+import { useDevice } from "@/contexts/DeviceContext";
+import { getNotifications } from "@/services/firebase/notifications";
+import { AppNotification } from "@/services/types";
+import { useEffect, useState } from "react";
 
-export function useNotifications(): Notification[] {
-  return [
-    {
-      id: "1",
-      type: "critical",
-      title: "AMMONIA SPIKE",
-      date: "May 16, 2026 10:00 PM",
-    },
-    {
-      id: "2",
-      type: "warning",
-      title: "TEMP FLUCTUATIONS",
-      date: "May 07, 2026 10:00 PM",
-    },
-  ];
+export function useNotifications(): {
+  data: AppNotification[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { selectedDevice } = useDevice();
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!selectedDevice) return;
+    setIsLoading(true);
+    setError(null);
+    getNotifications(selectedDevice.id)
+      .then(setNotifications)
+      .catch(setError)
+      .finally(() => setIsLoading(false));
+  }, [selectedDevice]);
+
+  return { data: notifications, isLoading, error };
 }

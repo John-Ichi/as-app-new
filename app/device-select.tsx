@@ -1,4 +1,5 @@
 import PressableScale from "@/components/PressableScale";
+import { ErrorState, LoadingState } from "@/components/StateDisplay";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useDevices } from "@/hooks/useDevices";
 import { router, Stack } from "expo-router";
@@ -9,13 +10,22 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const DeviceSelect = () => {
-  const devices = useDevices();
+  const { devices, isLoading } = useDevices();
   const { selectDevice } = useDevice();
 
   const handleSelect = (device: (typeof devices)[number]) => {
     selectDevice(device);
     router.push("/(drawer)");
   };
+
+  if (isLoading) return <LoadingState />;
+  if (devices.length === 0)
+    return (
+      <ErrorState
+        title="No devices available."
+        message="Please check your connection or add a device."
+      />
+    );
 
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">

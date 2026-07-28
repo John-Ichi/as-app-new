@@ -19,5 +19,6 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before 
 
 # Constraints
 
-- Do not read potentially confidential files without permission
-- Avoid making changes outside of generated plans
+- Do not read potentially confidential files without permission. This can include but is not limited to: .env, .env._, _.key, _.pem, _.p12, service-accoount\*.json, and any file containing credentials/secrets.
+- Avoid making changes outside of generated plans.
+- Do NOT do anything that is outisde of the scope of the instruction provided.

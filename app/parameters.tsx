@@ -2,6 +2,7 @@ import DataTable from "@/components/DataTable";
 import DataTableModal from "@/components/DataTableModal";
 import PressableScale from "@/components/PressableScale";
 import StatCard from "@/components/StatCard";
+import { ErrorState, LoadingState } from "@/components/StateDisplay";
 import { graphConfig } from "@/constants/graphs";
 import { icons } from "@/constants/icons";
 import {
@@ -11,9 +12,12 @@ import {
   parameterStatusTextColor,
 } from "@/constants/status";
 import { colors } from "@/constants/theme";
+import { useDevice } from "@/contexts/DeviceContext";
 import { useGraphData } from "@/hooks/useGraphData";
+import { getRawReadings } from "@/services/firebase/graphs";
+import { Redirect } from "expo-router";
 import { styled } from "nativewind";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -26,10 +30,25 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Parameters = () => {
-  const allData = useGraphData();
-  const [showModal, setShowModal] = useState(false);
-
+  const { selectedDevice } = useDevice();
+  const { data: allData, isLoading, error } = useGraphData();
   const { width: screenWidth } = useWindowDimensions();
+  const [showModal, setShowModal] = useState(false);
+  const [rawData, setRawData] = useState<{ keys: string[]; values: number[] }>({
+    keys: [],
+    values: [],
+  });
+
+  useEffect(() => {
+    if (!selectedDevice) return;
+    getRawReadings(selectedDevice.id, "ammonia", 288).then(setRawData);
+  }, [selectedDevice]);
+
+  if (!selectedDevice) return <Redirect href="/onboarding" />;
+  if (error) return <ErrorState message={error.message} />;
+  if (isLoading) return <LoadingState />;
+  if (allData.length === 0) return <ErrorState message="No data available." />;
+
   const colCount = 1 + allData.length;
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);
   const colWidth = Math.max(Math.min(naturalWidth, 90), 75);
@@ -45,33 +64,38 @@ const Parameters = () => {
   const ammonia = allData.find((d) => d.id === "ammonia");
   const points = ammonia?.oneDay;
 
-  const maxVal = points ? Math.max(...points.map((p) => p.value)) : 0;
-  const maxPoint = points?.find((p) => p.value === maxVal);
-  const minVal = points ? Math.min(...points.map((p) => p.value)) : 0;
-  const minPoint = points?.find((p) => p.value === minVal);
+  const maxVal = rawData.values.length > 0 ? Math.max(...rawData.values) : 0;
+  const minVal = rawData.values.length > 0 ? Math.min(...rawData.values) : 0;
   const avgVal = points
     ? points.reduce((s, p) => s + p.value, 0) / points.length
     : 0;
 
-  const maxStatus = classify("ammonia", maxVal)!;
+  const maxIdx = rawData.values.indexOf(maxVal);
+  const minIdx = rawData.values.indexOf(minVal);
+
+  const maxStatus = classify("ammonia", maxVal) ?? "normal";
   const maxBg = parameterStatusBg[maxStatus];
   const maxTextColor = parameterStatusTextColor[maxStatus];
   const maxLabel =
-    maxPoint?.label ??
-    (maxPoint !== undefined
-      ? `${points!.indexOf(maxPoint).toString().padStart(2, "0")}:00`
-      : "N/A");
+    maxIdx >= 0
+      ? new Date(Number(rawData.keys[maxIdx])).toLocaleString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "N/A";
 
-  const minStatus = classify("ammonia", minVal)!;
+  const minStatus = classify("ammonia", minVal) ?? "normal";
   const minTextColor = parameterStatusTextColor[minStatus];
   const minBg = parameterStatusBg[minStatus];
   const minLabel =
-    minPoint?.label ??
-    (minPoint !== undefined
-      ? `${points!.indexOf(minPoint).toString().padStart(2, "0")}:00`
-      : "N/A");
+    minIdx >= 0
+      ? new Date(Number(rawData.keys[minIdx])).toLocaleString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "N/A";
 
-  const avgStatus = classify("ammonia", avgVal)!;
+  const avgStatus = classify("ammonia", avgVal) ?? "normal";
   const avgLabel = parameterStatusLabel[avgStatus];
   const avgTextColor = parameterStatusTextColor[avgStatus];
 

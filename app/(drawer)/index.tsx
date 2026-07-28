@@ -62,7 +62,7 @@ const Dashboard = () => {
                     <Text
                       className={`${riskTextColor[predictiveAlert.risk]} font-poppins-extrabold`}
                     >
-                      {predictiveAlert.risk}
+                      COMING SOON
                     </Text>{" "}
                     (24 HRS)
                   </Text>

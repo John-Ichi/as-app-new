@@ -1,5 +1,8 @@
 import AlertCard from "@/components/AlertCard";
+import { ErrorState, LoadingState } from "@/components/StateDisplay";
+import { useDevice } from "@/contexts/DeviceContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { Redirect } from "expo-router";
 import { styled } from "nativewind";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -7,7 +10,14 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Notifications = () => {
-  const notifications = useNotifications();
+  const { selectedDevice } = useDevice();
+  const { data: notifications, isLoading, error } = useNotifications();
+
+  if (!selectedDevice) return <Redirect href="/onboarding" />;
+  if (error) return <ErrorState message={error.message} />;
+  if (isLoading) return <LoadingState />;
+  if (notifications.length === 0)
+    return <ErrorState message="No data available." />;
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">

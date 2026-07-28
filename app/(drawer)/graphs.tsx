@@ -1,5 +1,6 @@
 import ParameterChart from "@/components/ParameterChart";
 import PressableScale from "@/components/PressableScale";
+import { ErrorState, LoadingState } from "@/components/StateDisplay";
 import { graphConfig } from "@/constants/graphs";
 import type { ParameterId } from "@/constants/parameters";
 import { parameterIds, parameterMap } from "@/constants/parameters";
@@ -12,6 +13,8 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Graphs = () => {
+  const { data: allData, isLoading, error } = useGraphData();
+
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = screenWidth - 48;
 
@@ -30,7 +33,6 @@ const Graphs = () => {
     turbidity: "oneDay",
   });
 
-  const allData = useGraphData();
   const scrollToSection = useCallback((id: ParameterId) => {
     const y = sectionPositions.current[id];
     if (y !== undefined) {
@@ -38,17 +40,9 @@ const Graphs = () => {
     }
   }, []);
 
-  if (allData.length === 0) {
-    return (
-      <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
-        <View className="flex-1 bg-background rounded-t-xl items-center justify-center">
-          <Text className="text-sm text-center text-muted font-poppins-regular">
-            No data available. Please check your connection or try again later.
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  if (error) return <ErrorState message={error.message} />;
+  if (isLoading) return <LoadingState />;
+  if (allData.length === 0) return <ErrorState message="No data available." />;
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">

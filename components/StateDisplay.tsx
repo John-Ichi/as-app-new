@@ -1,16 +1,22 @@
-import { Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@/constants/theme";
+import { styled } from "nativewind";
+import { ActivityIndicator, Text, View } from "react-native";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
-interface LoadingStateProps {
-  message?: string;
-}
+const SafeAreaView = styled(RNSafeAreaView);
 
-export const LoadingState = ({ message = "Loading..." }: LoadingStateProps) => (
+export const LoadingState = () => (
   <SafeAreaView
     edges={["bottom"]}
     className="flex-1 bg-background items-center justify-center"
   >
-    <Text className="text-lg text-muted font-poppins-regular">{message}</Text>
+    <View className="flex-1 items-center justify-center">
+      <ActivityIndicator
+        size="large"
+        color={colors.primary}
+        accessibilityLabel="Loading"
+      />
+    </View>
   </SafeAreaView>
 );
 

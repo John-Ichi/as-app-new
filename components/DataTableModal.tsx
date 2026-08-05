@@ -24,18 +24,26 @@ const DataTableModal = ({ visible, onClose }: Props) => {
   const [allData, setAllData] = useState<
     { id: ParameterId; points: GraphDataPoint[] }[]
   >([]);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!selectedDevice) return;
     const deviceId = selectedDevice.id;
     async function fetchData() {
-      const results = await Promise.all(
-        parameterIds.map(async (id) => ({
-          id,
-          points: await getHalfHourData(deviceId, id),
-        })),
-      );
-      setAllData(results);
+      setError(null);
+      try {
+        const results = await Promise.all(
+          parameterIds.map(async (id) => ({
+            id,
+            points: await getHalfHourData(deviceId, id),
+          })),
+        );
+        setAllData(results);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to load data."),
+        );
+      }
     }
     fetchData();
   }, [selectedDevice, visible]);
@@ -47,7 +55,7 @@ const DataTableModal = ({ visible, onClose }: Props) => {
   const columns = parameterIds.map((id) => graphConfig[id].shortLabel);
   const rows = Array.from({ length: 48 }, (_, i) => ({
     label: allData[0]?.points[i]?.label ?? "",
-    values: allData.map(({ id, points }) => points[i].value.toFixed(2)),
+    values: allData.map(({ points }) => points[i]?.value?.toFixed(2) ?? "-"),
   }));
 
   return (
@@ -76,12 +84,18 @@ const DataTableModal = ({ visible, onClose }: Props) => {
           </PressableScale>
         </View>
         <View className="flex-1 w-full max-w-xl mx-auto px-4 pb-10">
-          <DataTable
-            columns={columns}
-            rows={rows}
-            colWidth={colWidth}
-            nestedScroll
-          />
+          {error ? (
+            <Text className="text-lg text-danger font-poppins-bold text-center">
+              {error.message}
+            </Text>
+          ) : (
+            <DataTable
+              columns={columns}
+              rows={rows}
+              colWidth={colWidth}
+              nestedScroll
+            />
+          )}
         </View>
       </SafeAreaView>
     </Modal>

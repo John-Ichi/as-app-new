@@ -1,5 +1,6 @@
 import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
+import { useDevice } from "@/contexts/DeviceContext";
 import { Stack, router } from "expo-router";
 import { styled } from "nativewind";
 import { Image, Text, View } from "react-native";
@@ -8,6 +9,10 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Onboarding = () => {
+  const { selectedDevice, isHydrated } = useDevice();
+
+  if (!isHydrated) return null;
+
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
@@ -23,11 +28,8 @@ const Onboarding = () => {
         </View>
         <View className="py-18 items-center">
           <PressableScale
-            onPress={
-              () =>
-                router.push(
-                  "/device-select",
-                ) /** replace later to connect to IoT device */
+            onPress={() =>
+              router.push(selectedDevice ? "/(drawer)" : "/device-select")
             }
             className="w-[66%]"
           >

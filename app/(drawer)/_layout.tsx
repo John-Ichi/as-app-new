@@ -17,12 +17,12 @@ import {
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function DrawerLayout() {
-  const { selectedDevice } = useDevice();
-  if (!selectedDevice) return <Redirect href="/onboarding" />;
-
+  const { selectedDevice, selectDevice, isHydrated } = useDevice();
   const insets = useSafeAreaInsets();
   const { data: notifications } = useNotifications();
-  const { selectDevice } = useDevice();
+
+  if (!isHydrated) return null;
+  if (!selectedDevice) return <Redirect href="/onboarding" />;
 
   return (
     <Drawer
@@ -121,9 +121,7 @@ export default function DrawerLayout() {
               <PressableScale
                 onPress={() => {
                   selectDevice(null);
-                  router.replace(
-                    "/onboarding",
-                  ); /** replace later to disconnect from IoT device and route to connection */
+                  router.replace("/onboarding");
                 }}
               >
                 <Text className="text-lg text-white font-poppins-medium bg-primary rounded-bg shadow-md shadow-slate-400/30 px-12 py-4">

@@ -11,7 +11,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 const DeviceSelect = () => {
   const { devices, isLoading } = useDevices();
-  const { selectDevice } = useDevice();
+  const { lastDevice, selectDevice } = useDevice();
 
   const handleSelect = (device: (typeof devices)[number]) => {
     selectDevice(device);
@@ -38,25 +38,37 @@ const DeviceSelect = () => {
           data={devices}
           keyExtractor={(item) => item.id}
           contentContainerClassName="gap-y-4"
-          renderItem={({ item }) => (
-            <PressableScale onPress={() => handleSelect(item)}>
-              <View className="flex-row bg-white rounded-bg shadow-md shadow-slate-400/30 items-center p-4">
-                <View className="w-10 h-10 bg-success rounded-full items-center justify-center">
-                  <Text className="text-lg text-white font-poppins-bold">
-                    {"\u2713"}
-                  </Text>
+          renderItem={({ item }) => {
+            const isCurrent = lastDevice?.id === item.id;
+            return (
+              <PressableScale onPress={() => handleSelect(item)}>
+                <View
+                  className={`flex-row bg-white rounded-bg shadow-md shadow-slate-400/30 items-center p-4 ${
+                    isCurrent ? "border-2 border-primary" : ""
+                  }`}
+                >
+                  <View className="w-10 h-10 bg-success rounded-full items-center justify-center">
+                    <Text className="text-lg text-white font-poppins-bold">
+                      {"\u2713"}
+                    </Text>
+                  </View>
+                  <View className="flex-1 ml-4">
+                    <Text className="text-lg text-primary font-poppins-bold">
+                      {item.name}
+                    </Text>
+                    <Text className="text-md text-muted font-poppins-medium">
+                      {item.location}
+                    </Text>
+                    {isCurrent && (
+                      <Text className="text-sm text-primary font-poppins-semibold mt-1">
+                        PREVIOUSLY CONNECTED
+                      </Text>
+                    )}
+                  </View>
                 </View>
-                <View className="flex-1 ml-4">
-                  <Text className="text-lg text-primary font-poppins-bold">
-                    {item.name}
-                  </Text>
-                  <Text className="text-md text-muted font-poppins-medium">
-                    {item.location}
-                  </Text>
-                </View>
-              </View>
-            </PressableScale>
-          )}
+              </PressableScale>
+            );
+          }}
         />
       </View>
     </SafeAreaView>

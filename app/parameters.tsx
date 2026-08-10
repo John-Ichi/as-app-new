@@ -39,22 +39,38 @@ const Parameters = () => {
     values: [],
   });
   const [rawDataError, setRawDataError] = useState<Error | null>(null);
+  const [isRawDataLoading, setIsRawDataLoading] = useState(false);
 
   useEffect(() => {
     if (!selectedDevice) return;
+    let cancelled = false;
+    setRawData({ keys: [], values: [] });
+    setRawDataError(null);
+    setIsRawDataLoading(true);
     getRawReadings(selectedDevice.id, "ammonia", 288)
-      .then(setRawData)
-      .catch((err) =>
-        setRawDataError(
-          err instanceof Error ? err : new Error("Failed to load raw data."),
-        )
-      );
+      .then((data) => {
+        if (!cancelled) {
+          setRawData(data);
+          setRawDataError(null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setRawDataError(
+            err instanceof Error ? err : new Error("Failed to load raw data."),
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsRawDataLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [selectedDevice]);
 
   if (!selectedDevice) return <Redirect href="/onboarding" />;
   if (error) return <ErrorState message={error.message} />;
   if (rawDataError) return <ErrorState message={rawDataError.message} />;
-  if (isLoading) return <LoadingState />;
+  if (isLoading || isRawDataLoading) return <LoadingState />;
   if (allData.length === 0) return <ErrorState title="No data available." />;
 
   const colCount = 1 + allData.length;

@@ -15,12 +15,14 @@ export function useNotifications(): {
 
   useEffect(() => {
     if (!selectedDevice) return;
+    let cancelled = false;
     setIsLoading(true);
     setError(null);
     getNotifications(selectedDevice.id)
-      .then(setNotifications)
-      .catch(setError)
-      .finally(() => setIsLoading(false));
+      .then((result) => { if (!cancelled) setNotifications(result); })
+      .catch((err) => { if (!cancelled) setError(err); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, [selectedDevice]);
 
   return { data: notifications, isLoading, error };

@@ -14,7 +14,16 @@ export function getWaterQualityData(
     latestRef,
     (snapshot) => {
       const data = snapshot.val();
-      if (!data) return;
+      if (!data) {
+        onData({
+          overallStatus: "NORMAL",
+          parameters: [],
+          predictiveAlert: { risk: "LOW" },
+          isLoading: false,
+          error: null,
+        });
+        return;
+      }
 
       const readings: ParameterReading[] = [
         { id: "ammonia", value: data.ammonia, status: classify("ammonia", data.ammonia) },

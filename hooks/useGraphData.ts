@@ -15,12 +15,14 @@ export function useGraphData(): {
 
   useEffect(() => {
     if (!selectedDevice) return;
+    let cancelled = false;
     setIsLoading(true);
     setError(null);
     getGraphData(selectedDevice.id)
-      .then(setData)
-      .catch(setError)
-      .finally(() => setIsLoading(false));
+      .then((result) => { if (!cancelled) setData(result); })
+      .catch((err) => { if (!cancelled) setError(err); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, [selectedDevice]);
 
   return { data, isLoading, error };

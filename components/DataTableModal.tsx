@@ -4,7 +4,7 @@ import { graphConfig } from "@/constants/graphs";
 import { ParameterId, parameterIds } from "@/constants/parameters";
 import { colors } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
-import { getHalfHourData } from "@/services/firebase/graphs";
+import { getAllHalfHourData } from "@/services/firebase/graphs";
 import type { GraphDataPoint } from "@/services/types";
 import { styled } from "nativewind";
 import { useEffect, useState } from "react";
@@ -27,25 +27,27 @@ const DataTableModal = ({ visible, onClose }: Props) => {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!selectedDevice) return;
+    if (!selectedDevice || !visible) return;
     const deviceId = selectedDevice.id;
+    let cancelled = false;
+    setAllData([]);
+    setError(null);
     async function fetchData() {
-      setError(null);
       try {
-        const results = await Promise.all(
-          parameterIds.map(async (id) => ({
-            id,
-            points: await getHalfHourData(deviceId, id),
-          })),
-        );
-        setAllData(results);
+        const results = await getAllHalfHourData(deviceId);
+        if (!cancelled) setAllData(results);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to load data."),
-        );
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err : new Error("Failed to load data."),
+          );
+        }
       }
     }
     fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedDevice, visible]);
 
   const colCount = 1 + parameterIds.length;

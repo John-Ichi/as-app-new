@@ -38,16 +38,24 @@ const Parameters = () => {
     keys: [],
     values: [],
   });
+  const [rawDataError, setRawDataError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!selectedDevice) return;
-    getRawReadings(selectedDevice.id, "ammonia", 288).then(setRawData);
+    getRawReadings(selectedDevice.id, "ammonia", 288)
+      .then(setRawData)
+      .catch((err) =>
+        setRawDataError(
+          err instanceof Error ? err : new Error("Failed to load raw data."),
+        )
+      );
   }, [selectedDevice]);
 
   if (!selectedDevice) return <Redirect href="/onboarding" />;
   if (error) return <ErrorState message={error.message} />;
+  if (rawDataError) return <ErrorState message={rawDataError.message} />;
   if (isLoading) return <LoadingState />;
-  if (allData.length === 0) return <ErrorState message="No data available." />;
+  if (allData.length === 0) return <ErrorState title="No data available." />;
 
   const colCount = 1 + allData.length;
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);

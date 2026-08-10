@@ -9,6 +9,7 @@ interface ParameterCardProps {
 
 const ParameterCard = ({ id, value, className = "" }: ParameterCardProps) => {
   const metadata = parameterMap[id];
+  if (!metadata) return null;
   const wide = metadata.fullWidth;
   const baseClasses =
     "bg-white rounded-sm shadow-md shadow-slate-400/30 justify-between p-4";

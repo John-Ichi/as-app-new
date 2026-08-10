@@ -99,3 +99,14 @@ export async function getHalfHourData(
   const keys = Object.keys(raw).sort();
   return averageGroups(keys, raw, id, 6, halfHourLabel);
 }
+
+export async function getAllHalfHourData(
+  deviceId: string,
+): Promise<{ id: ParameterId; points: GraphDataPoint[] }[]> {
+  const raw = await fetchReadings(deviceId, 288);
+  const keys = Object.keys(raw).sort();
+  return parameterIds.map((id) => ({
+    id,
+    points: averageGroups(keys, raw, id, 6, halfHourLabel),
+  }));
+}

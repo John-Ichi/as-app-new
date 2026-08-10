@@ -17,7 +17,7 @@ const Notifications = () => {
   if (error) return <ErrorState message={error.message} />;
   if (isLoading) return <LoadingState />;
   if (notifications.length === 0)
-    return <ErrorState message="No data available." />;
+    return <ErrorState title="No data available." />;
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">

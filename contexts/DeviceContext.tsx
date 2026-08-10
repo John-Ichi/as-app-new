@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -46,17 +47,21 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [lastDevice, setLastDevice] = useState<Device | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const selectedDuringHydration = useRef(false);
 
   useEffect(() => {
     Promise.all([readDevice(SELECTED_DEVICE_KEY), readDevice(LAST_DEVICE_KEY)])
       .then(([selected, last]) => {
-        setSelectedDevice(selected);
-        setLastDevice(last);
+        if (!selectedDuringHydration.current) {
+          setSelectedDevice(selected);
+          setLastDevice(last);
+        }
       })
       .finally(() => setIsHydrated(true));
   }, []);
 
   const selectDevice = useCallback((device: Device | null) => {
+    selectedDuringHydration.current = true;
     setSelectedDevice(device);
     if (device) {
       setLastDevice(device);

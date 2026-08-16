@@ -14,8 +14,14 @@ export function useNotifications(): {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!selectedDevice) return;
+    if (!selectedDevice) {
+      setNotifications([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
     let cancelled = false;
+    setNotifications([]);
     setIsLoading(true);
     setError(null);
     getNotifications(selectedDevice.id)

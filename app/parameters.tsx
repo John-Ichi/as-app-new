@@ -13,6 +13,7 @@ import {
 } from "@/constants/status";
 import { colors } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
+import { useDownloadData } from "@/hooks/useDownloadData";
 import { useGraphData } from "@/hooks/useGraphData";
 import { getRawReadings } from "@/services/firebase/graphs";
 import { Redirect } from "expo-router";
@@ -32,6 +33,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 const Parameters = () => {
   const { selectedDevice } = useDevice();
   const { data: allData, isLoading, error } = useGraphData();
+  const { download, isDownloading } = useDownloadData();
   const { width: screenWidth } = useWindowDimensions();
   const [showModal, setShowModal] = useState(false);
   const [rawData, setRawData] = useState<{ keys: string[]; values: number[] }>({
@@ -179,9 +181,8 @@ const Parameters = () => {
 
           <View className="items-start py-4">
             <PressableScale
-              onPress={() => {
-                /** replace later to download data */
-              }}
+              onPress={download}
+              disabled={isDownloading}
             >
               <View className="flex-row bg-white rounded-bg shadow-md shadow-slate-400/30 items-center px-4 pt-3 pb-2">
                 <Image

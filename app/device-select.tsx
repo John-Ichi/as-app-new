@@ -10,7 +10,7 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const DeviceSelect = () => {
-  const { devices, isLoading } = useDevices();
+  const { devices, isLoading, error } = useDevices();
   const { lastDevice, selectDevice } = useDevice();
 
   const handleSelect = (device: (typeof devices)[number]) => {
@@ -19,6 +19,7 @@ const DeviceSelect = () => {
   };
 
   if (isLoading) return <LoadingState />;
+  if (error) return <ErrorState message={error.message} />;
   if (devices.length === 0)
     return (
       <ErrorState

@@ -8,7 +8,7 @@ function round(value: number, decimals: number): number {
   return Math.round(value * factor) / factor;
 }
 
-async function fetchReadings(
+export async function fetchReadings(
   deviceId: string,
   limit: number,
 ): Promise<Record<string, Record<string, number>>> {

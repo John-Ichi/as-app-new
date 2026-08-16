@@ -14,8 +14,14 @@ export function useGraphData(): {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!selectedDevice) return;
+    if (!selectedDevice) {
+      setData([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
     let cancelled = false;
+    setData([]);
     setIsLoading(true);
     setError(null);
     getGraphData(selectedDevice.id)

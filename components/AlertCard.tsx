@@ -1,14 +1,14 @@
 import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
 import { Image, Text, View } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AlertCardProps {
   type: "critical" | "warning";
   title: string;
   date: string;
   read: boolean;
-  onAcknowledge?: () => void;
+  onAcknowledge?: () => Promise<void>;
 }
 
 const iconMap = {
@@ -23,6 +23,11 @@ const buttonBgMap = { critical: "bg-danger", warning: "bg-warning" } as const;
 
 const AlertCard = ({ type, title, date, read, onAcknowledge }: AlertCardProps) => {
   const [acknowledged, setAcknowledged] = useState(read);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setAcknowledged(read);
+  }, [read]);
 
   return (
     <View
@@ -35,11 +40,18 @@ const AlertCard = ({ type, title, date, read, onAcknowledge }: AlertCardProps) =
           {date}
         </Text>
         <PressableScale
-          disabled={acknowledged}
-          onPress={() => {
-            if (acknowledged) return;
-            setAcknowledged(true);
-            onAcknowledge?.();
+          disabled={loading || acknowledged}
+          onPress={async () => {
+            if (loading || acknowledged) return;
+            setLoading(true);
+            try {
+              await onAcknowledge?.();
+              setAcknowledged(true);
+            } catch (error) {
+              console.error("Failed to acknowledge:", error);
+            } finally {
+              setLoading(false);
+            }
           }}
         >
           <Text

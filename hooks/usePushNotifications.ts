@@ -1,11 +1,12 @@
-import { useEffect } from "react";
-import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
-import Constants from "expo-constants";
-import { ref, set } from "firebase/database";
-import { db } from "@/firebase/config";
 import { useDevice } from "@/contexts/DeviceContext";
+import { db } from "@/firebase/config";
+import Constants from "expo-constants";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { ref, set } from "firebase/database";
+import { useEffect } from "react";
+import { Platform } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -24,11 +25,14 @@ export function usePushNotifications() {
     if (!selectedDevice || !Device.isDevice) return;
 
     async function register() {
+      if (!selectedDevice) return;
+
       const { status } = await Notifications.getPermissionsAsync();
       let finalStatus = status;
 
       if (status !== "granted") {
-        const { status: requested } = await Notifications.requestPermissionsAsync();
+        const { status: requested } =
+          await Notifications.requestPermissionsAsync();
         finalStatus = requested;
       }
 
@@ -40,9 +44,8 @@ export function usePushNotifications() {
 
       if (!projectId) return;
 
-      const token = (
-        await Notifications.getExpoPushTokenAsync({ projectId })
-      ).data;
+      const token = (await Notifications.getExpoPushTokenAsync({ projectId }))
+        .data;
 
       const tokenRef = ref(
         db,
@@ -50,7 +53,7 @@ export function usePushNotifications() {
       );
       await set(tokenRef, true);
 
-      if (Device.OS === "android") {
+      if (Platform.OS === "android") {
         await Notifications.setNotificationChannelAsync("alerts", {
           name: "Alert Notifications",
           importance: Notifications.AndroidImportance.HIGH,
@@ -74,11 +77,21 @@ export function usePushNotifications() {
 
   // Handle notification taps
   useEffect(() => {
+    Notifications.getLastNotificationResponse().then((response) => {
+      if (response) {
+        const url = response.notification.request.content.data?.url;
+        if (typeof url === "string") {
+          router.push(url as any);
+        }
+        Notifications.dismissNotificationAsync(response.notification.request.identifier);
+      }
+    });
+
     const sub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         const url = response.notification.request.content.data?.url;
         if (typeof url === "string") {
-          router.push(url);
+          router.push(url as any);
         }
       },
     );

@@ -77,15 +77,14 @@ export function usePushNotifications() {
 
   // Handle notification taps
   useEffect(() => {
-    Notifications.getLastNotificationResponse().then((response) => {
-      if (response) {
-        const url = response.notification.request.content.data?.url;
-        if (typeof url === "string") {
-          router.push(url as any);
-        }
-        Notifications.dismissNotificationAsync(response.notification.request.identifier);
+    const response = Notifications.getLastNotificationResponse();
+    if (response) {
+      const url = response.notification.request.content.data?.url;
+      if (typeof url === "string") {
+        router.push(url as any);
       }
-    });
+      Notifications.clearLastNotificationResponse();
+    }
 
     const sub = Notifications.addNotificationResponseReceivedListener(
       (response) => {

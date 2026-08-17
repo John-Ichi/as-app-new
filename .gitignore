@@ -41,6 +41,14 @@ yarn-error.*
 /ios
 /android
 
+# Firebase
+google-services.json
+GoogleService-Info.plist
+
+# Build artifacts
+*.apk
+*.aab
+
 # .opencode
 .opencode/
 

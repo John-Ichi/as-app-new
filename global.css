@@ -11,6 +11,12 @@
   --color-secondary: #10222c; /* define secondary color */
   --color-tertiary: rgba(11, 61, 89, 0.44); /* define tertiary color */
   --color-muted: #473f3f; /* define muted/gray color */
+  --color-muted-light: rgba(
+    71,
+    63,
+    63,
+    0.12
+  ); /* acknowledged card background */
   --color-success: #00993b; /* define green color */
   --color-success-light: rgba(
     156,

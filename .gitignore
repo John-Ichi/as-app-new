@@ -43,3 +43,8 @@ yarn-error.*
 
 # .opencode
 .opencode/
+
+# Firebase
+functions/lib/
+firebase-debug.log
+.vercel

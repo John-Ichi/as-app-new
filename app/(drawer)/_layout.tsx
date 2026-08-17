@@ -47,13 +47,17 @@ export default function DrawerLayout() {
           >
             <View className="relative">
               <Image source={icons.alert} style={{ width: 24, height: 24 }} />
-              {notifications.length > 0 && (
-                <View className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center">
-                  <Text className="text-sm text-white font-poppins-bold">
-                    {notifications.length}
-                  </Text>
-                </View>
-              )}
+              {(() => {
+                const unread = notifications.filter((n) => !n.read).length;
+                if (unread === 0) return null;
+                return (
+                  <View className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center">
+                    <Text className="text-sm text-white font-poppins-bold">
+                      {unread > 99 ? "99+" : unread}
+                    </Text>
+                  </View>
+                );
+              })()}
             </View>
           </PressableScale>
         ),

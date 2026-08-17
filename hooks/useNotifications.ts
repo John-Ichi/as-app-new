@@ -1,5 +1,5 @@
 import { useDevice } from "@/contexts/DeviceContext";
-import { getNotifications } from "@/services/firebase/notifications";
+import { subscribeNotifications } from "@/services/firebase/notifications";
 import { AppNotification } from "@/services/types";
 import { useEffect, useState } from "react";
 
@@ -20,15 +20,23 @@ export function useNotifications(): {
       setIsLoading(false);
       return;
     }
-    let cancelled = false;
-    setNotifications([]);
+
     setIsLoading(true);
     setError(null);
-    getNotifications(selectedDevice.id)
-      .then((result) => { if (!cancelled) setNotifications(result); })
-      .catch((err) => { if (!cancelled) setError(err); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
-    return () => { cancelled = true; };
+
+    const unsubscribe = subscribeNotifications(
+      selectedDevice.id,
+      (data) => {
+        setNotifications(data);
+        setIsLoading(false);
+      },
+      (err) => {
+        setError(err);
+        setIsLoading(false);
+      },
+    );
+
+    return unsubscribe;
   }, [selectedDevice]);
 
   return { data: notifications, isLoading, error };

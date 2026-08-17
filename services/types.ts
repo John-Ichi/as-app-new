@@ -37,4 +37,9 @@ export interface AppNotification {
   type: "critical" | "warning";
   title: string;
   date: string;
+  read: boolean;
+  parameter: string;
+  value: number;
+  ts: number;
+  pushed?: boolean;
 }

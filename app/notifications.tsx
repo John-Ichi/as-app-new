@@ -2,6 +2,7 @@ import AlertCard from "@/components/AlertCard";
 import { ErrorState, LoadingState } from "@/components/StateDisplay";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { acknowledgeNotification } from "@/services/firebase/notifications";
 import { Redirect } from "expo-router";
 import { styled } from "nativewind";
 import { ScrollView, Text, View } from "react-native";
@@ -41,6 +42,8 @@ const Notifications = () => {
                 type={n.type}
                 title={n.title}
                 date={n.date}
+                read={n.read}
+                onAcknowledge={() => acknowledgeNotification(selectedDevice.id, n.id)}
               />
             ))}
           </View>

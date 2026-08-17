@@ -6,6 +6,7 @@ import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
 import { Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { PushNotificationRegistrar } from "@/components/PushNotificationRegistrar";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -30,6 +31,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView className="flex-1">
       <DeviceProvider>
+        <PushNotificationRegistrar />
         <Stack
           initialRouteName="onboarding"
           screenOptions={{ headerShown: false }}

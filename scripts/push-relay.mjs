@@ -6,6 +6,10 @@ if (!FIREBASE_RTDB_URL || !EXPO_ACCESS_TOKEN) {
   process.exit(1);
 }
 
+function desanitizeToken(token) {
+  return token.replace(/_lb_/g, "[").replace(/_rb_/g, "]");
+}
+
 async function main() {
   const devicesResponse = await fetch(`${FIREBASE_RTDB_URL}/devices.json`);
   const devices = await devicesResponse.json();
@@ -42,7 +46,7 @@ async function main() {
 
     for (const [alertId, alert] of unpushed) {
       const messages = expoTokens.map((token) => ({
-        to: token,
+        to: desanitizeToken(token),
         sound: "default",
         title: alert.title,
         body: `${alert.parameter}: ${alert.value}`,

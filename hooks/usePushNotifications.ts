@@ -8,21 +8,27 @@ import { ref, set } from "firebase/database";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+if (Platform.OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+}
+
+function sanitizeToken(token: string): string {
+  return token.replace(/\[/g, "_lb_").replace(/\]/g, "_rb_");
+}
 
 export function usePushNotifications() {
   const { selectedDevice } = useDevice();
 
   // Register for push notifications
   useEffect(() => {
-    if (!selectedDevice || !Device.isDevice) return;
+    if (!selectedDevice || !Device.isDevice || Platform.OS === "web") return;
 
     async function register() {
       if (!selectedDevice) return;
@@ -49,7 +55,7 @@ export function usePushNotifications() {
 
       const tokenRef = ref(
         db,
-        `devices/${selectedDevice.id}/pushTokens/${token}`,
+        `devices/${selectedDevice.id}/pushTokens/${sanitizeToken(token)}`,
       );
       await set(tokenRef, true);
 
@@ -67,6 +73,8 @@ export function usePushNotifications() {
 
   // Listen for foreground notifications
   useEffect(() => {
+    if (Platform.OS === "web") return;
+
     const sub = Notifications.addNotificationReceivedListener(
       (notification) => {
         console.log("Foreground notification:", notification);
@@ -77,6 +85,8 @@ export function usePushNotifications() {
 
   // Handle notification taps
   useEffect(() => {
+    if (Platform.OS === "web") return;
+
     const response = Notifications.getLastNotificationResponse();
     if (response) {
       const url = response.notification.request.content.data?.url;

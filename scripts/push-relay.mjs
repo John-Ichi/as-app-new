@@ -45,6 +45,11 @@ async function main() {
     const expoTokens = Object.keys(tokens);
 
     for (const [alertId, alert] of unpushed) {
+      if (!alert.title || alert.parameter == null || alert.value == null) {
+        console.warn(`Skipping malformed alert ${alertId} on ${deviceId}`);
+        continue;
+      }
+
       const messages = expoTokens.map((token) => ({
         to: desanitizeToken(token),
         sound: "default",

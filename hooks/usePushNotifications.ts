@@ -30,52 +30,67 @@ export function usePushNotifications() {
   useEffect(() => {
     if (!selectedDevice || !Device.isDevice || Platform.OS === "web") return;
 
+    let disposed = false;
     const storedRef: { current: ReturnType<typeof ref> | null } = {
       current: null,
     };
 
     async function register() {
-      if (!selectedDevice) return;
+      try {
+        if (!selectedDevice) return;
 
-      const { status } = await Notifications.getPermissionsAsync();
-      let finalStatus = status;
+        const { status } = await Notifications.getPermissionsAsync();
+        let finalStatus = status;
 
-      if (status !== "granted") {
-        const { status: requested } =
-          await Notifications.requestPermissionsAsync();
-        finalStatus = requested;
-      }
+        if (status !== "granted") {
+          const { status: requested } =
+            await Notifications.requestPermissionsAsync();
+          finalStatus = requested;
+        }
 
-      if (finalStatus !== "granted") return;
+        if (finalStatus !== "granted") return;
 
-      const projectId =
-        Constants?.expoConfig?.extra?.eas?.projectId ??
-        Constants?.easConfig?.projectId;
+        const projectId =
+          Constants?.expoConfig?.extra?.eas?.projectId ??
+          Constants?.easConfig?.projectId;
 
-      if (!projectId) return;
+        if (!projectId) return;
 
-      const token = (await Notifications.getExpoPushTokenAsync({ projectId }))
-        .data;
+        const token = (
+          await Notifications.getExpoPushTokenAsync({ projectId })
+        ).data;
 
-      const tokenRef = ref(
-        db,
-        `devices/${selectedDevice.id}/pushTokens/${sanitizeToken(token)}`,
-      );
-      storedRef.current = tokenRef;
-      await set(tokenRef, true);
+        if (disposed) return;
 
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("alerts", {
-          name: "Alert Notifications",
-          importance: Notifications.AndroidImportance.HIGH,
-          vibrationPattern: [0, 250, 250, 250],
-        });
+        const tokenRef = ref(
+          db,
+          `devices/${selectedDevice.id}/pushTokens/${sanitizeToken(token)}`,
+        );
+        storedRef.current = tokenRef;
+        await set(tokenRef, true);
+
+        if (disposed) {
+          set(tokenRef, null);
+          storedRef.current = null;
+          return;
+        }
+
+        if (Platform.OS === "android") {
+          await Notifications.setNotificationChannelAsync("alerts", {
+            name: "Alert Notifications",
+            importance: Notifications.AndroidImportance.HIGH,
+            vibrationPattern: [0, 250, 250, 250],
+          });
+        }
+      } catch (error) {
+        console.error("Failed to register push token:", error);
       }
     }
 
     register();
 
     return () => {
+      disposed = true;
       if (storedRef.current) {
         set(storedRef.current, null);
       }

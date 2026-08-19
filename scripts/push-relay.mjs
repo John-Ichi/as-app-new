@@ -11,7 +11,7 @@ function loadEnv() {
       if (eqIdx === -1) continue;
       const key = trimmed.slice(0, eqIdx).trim();
       const val = trimmed.slice(eqIdx + 1).trim();
-      if (!process.env[key]) process.env[key] = val;
+      if (process.env[key] === undefined) process.env[key] = val;
     }
   }
 }
@@ -67,6 +67,10 @@ async function main() {
     for (const [alertId, alert] of unpushed) {
       if (!alert.title || alert.parameter == null || alert.value == null) {
         console.warn(`Skipping malformed alert ${alertId} on ${deviceId}`);
+        await fetch(
+          `${FIREBASE_RTDB_URL}/alerts/${deviceId}/${alertId}/pushed.json`,
+          { method: "PUT", body: "true" }
+        );
         continue;
       }
 

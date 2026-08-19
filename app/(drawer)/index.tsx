@@ -70,7 +70,7 @@ const Dashboard = () => {
               </View>
               <PressableScale
                 onPress={() => {
-                  router.push("/parameters");
+                  router.navigate("/parameters");
                 }}
                 style={{ borderRadius: 20, paddingLeft: 8, paddingRight: 8 }}
                 pressedStyle={{ backgroundColor: colors.pressed }}

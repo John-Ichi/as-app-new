@@ -1,7 +1,7 @@
 import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
-import { Image, Text, View } from "react-native";
 import { useEffect, useState } from "react";
+import { Image, Text, View } from "react-native";
 
 interface AlertCardProps {
   type: "critical" | "warning";
@@ -21,7 +21,13 @@ const bgMap = {
 } as const;
 const buttonBgMap = { critical: "bg-danger", warning: "bg-warning" } as const;
 
-const AlertCard = ({ type, title, date, read, onAcknowledge }: AlertCardProps) => {
+const AlertCard = ({
+  type,
+  title,
+  date,
+  read,
+  onAcknowledge,
+}: AlertCardProps) => {
   const [acknowledged, setAcknowledged] = useState(read);
   const [loading, setLoading] = useState(false);
 
@@ -41,23 +47,27 @@ const AlertCard = ({ type, title, date, read, onAcknowledge }: AlertCardProps) =
         </Text>
         <PressableScale
           disabled={loading || acknowledged}
+          style={loading ? { opacity: 0.7 } : undefined}
           onPress={async () => {
             if (loading || acknowledged) return;
             setLoading(true);
             try {
               await onAcknowledge?.();
-              setAcknowledged(true);
             } catch (error) {
               console.error("Failed to acknowledge:", error);
             } finally {
-              setLoading(false);
+              setTimeout(() => setLoading(false), 0);
             }
           }}
         >
           <Text
             className={`text-md text-center text-white font-poppins-semibold p-2 ${acknowledged ? "bg-muted" : buttonBgMap[type]} rounded-md shadow-md shadow-slate-400/30`}
           >
-            {acknowledged ? "ACKNOWLEDGED" : "ACKNOWLEDGE"}
+            {acknowledged
+              ? "ACKNOWLEDGED"
+              : loading
+                ? "ACKNOWLEDGING..."
+                : "ACKNOWLEDGE"}
           </Text>
         </PressableScale>
       </View>

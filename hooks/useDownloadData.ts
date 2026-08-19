@@ -40,16 +40,24 @@ export function useDownloadData(): {
         const directory = await Directory.pickDirectoryAsync();
         if (!directory) return;
         const file = directory.createFile("ammosense-data.csv", "text/csv");
-        file.write(csv);
+        await file.write(csv);
         return;
       }
 
       const file = new File(Paths.cache, "ammosense-data.csv");
-      file.write(csv);
-      await Sharing.shareAsync(file.uri, {
-        mimeType: "text/csv",
-        UTI: "public.comma-separated-values-text",
-      });
+      await file.write(csv);
+      try {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: "text/csv",
+          UTI: "public.comma-separated-values-text",
+        });
+      } finally {
+        file.delete();
+      }
+    } catch (e) {
+      if (e instanceof Error && !e.message.includes("User")) {
+        console.error("Download failed:", e);
+      }
     } finally {
       setIsDownloading(false);
     }

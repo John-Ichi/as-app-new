@@ -4,10 +4,11 @@ import { icons } from "@/constants/icons";
 import { colors, fonts, fontSizes } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useNotifications } from "@/hooks/useNotifications";
-import { DrawerItem, DrawerItemList } from "@react-navigation/drawer";
+import { DrawerItem } from "@react-navigation/drawer";
 import { Redirect, router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { styled } from "nativewind";
+import { useRef } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import {
   SafeAreaView as RNSafeAreaView,
@@ -20,6 +21,7 @@ export default function DrawerLayout() {
   const { selectedDevice, selectDevice, isHydrated } = useDevice();
   const insets = useSafeAreaInsets();
   const { data: notifications } = useNotifications();
+  const lastNav = useRef(0);
 
   if (!isHydrated) return null;
   if (!selectedDevice) return <Redirect href="/onboarding" />;
@@ -36,9 +38,7 @@ export default function DrawerLayout() {
         headerShadowVisible: false,
         headerRight: () => (
           <PressableScale
-            onPress={() => {
-              router.push("/notifications");
-            }}
+            onPress={() => router.navigate("/notifications")}
             style={{ borderRadius: 20, marginRight: 8, padding: 8 }}
             pressedStyle={{ backgroundColor: colors.pressed }}
             accessibilityLabel="Notifications"
@@ -62,80 +62,120 @@ export default function DrawerLayout() {
           </PressableScale>
         ),
       }}
-      drawerContent={(props) => (
-        <View className="flex-1 bg-background">
-          <View
-            className="bg-primary px-4"
-            style={{ paddingTop: insets.top + 16, paddingBottom: 32 }}
-          >
-            <View className="flex-row items-center">
-              <Image source={icons.logo} style={{ width: 122, height: 122 }} />
-              <View className="flex-1">
-                <Text className="text-xl text-white font-poppins-bold">
-                  AmmoSense
-                </Text>
-                <Text className="text-md text-white font-poppins-medium">
-                  Predictive Water Quality Monitoring
-                </Text>
+      drawerContent={(props) => {
+        const handleDrawerNav = (route: "index" | "graphs") => {
+          const now = Date.now();
+          if (now - lastNav.current < 300) return;
+          lastNav.current = now;
+          props.navigation.closeDrawer();
+          setTimeout(() => {
+            props.navigation.navigate(route as any);
+          }, 50);
+        };
+
+        const handleStackNav = (path: "/parameters" | "/notifications") => {
+          const now = Date.now();
+          if (now - lastNav.current < 300) return;
+          lastNav.current = now;
+          props.navigation.closeDrawer();
+          setTimeout(() => router.navigate(path), 50);
+        };
+
+        return (
+          <View className="flex-1 bg-background">
+            <View
+              className="bg-primary px-4"
+              style={{ paddingTop: insets.top + 16, paddingBottom: 32 }}
+            >
+              <View className="flex-row items-center">
+                <Image source={icons.logo} style={{ width: 122, height: 122 }} />
+                <View className="flex-1">
+                  <Text className="text-xl text-white font-poppins-bold">
+                    AmmoSense
+                  </Text>
+                  <Text className="text-md text-white font-poppins-medium">
+                    Predictive Water Quality Monitoring
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-          <ScrollView className="flex-1 px-4 py-1">
-            <DrawerItemList {...props} />
-            <DrawerItem
-              style={{ marginVertical: 4 }}
-              label={() => (
-                <View className="flex-1">
-                  <Text className="text-lg text-secondary font-poppins-bold">
-                    Parameters
-                  </Text>
-                  <Text className="text-md text-muted font-poppins-medium">
-                    Real-time metrics for water quality parameters.
-                  </Text>
-                </View>
-              )}
-              icon={() => (
-                <Image
-                  source={icons.setting}
-                  style={{ width: 32, height: 32 }}
+            <ScrollView className="flex-1 px-4 py-1">
+              {DrawerRoutes.map((route) => (
+                <DrawerItem
+                  key={route.name}
+                  focused={props.state.routes[props.state.index].name === route.name}
+                  activeTintColor={colors.tertiary}
+                  style={{ marginVertical: 4 }}
+                  label={() => (
+                    <View className="flex-1">
+                      <Text className="text-lg text-secondary font-poppins-bold">
+                        {route.title}
+                      </Text>
+                      <Text className="text-md text-muted font-poppins-medium">
+                        {route.description}
+                      </Text>
+                    </View>
+                  )}
+                  icon={() => (
+                    <Image source={route.icon} style={{ width: 32, height: 32 }} />
+                  )}
+                  onPress={() => handleDrawerNav(route.name as "index" | "graphs")}
                 />
-              )}
-              onPress={() => router.push("/parameters")}
-            />
-            <DrawerItem
-              style={{ marginVertical: 4 }}
-              label={() => (
-                <View className="flex-1">
-                  <Text className="text-lg text-secondary font-poppins-bold">
-                    Notifications
+              ))}
+              <DrawerItem
+                activeTintColor={colors.tertiary}
+                style={{ marginVertical: 4 }}
+                label={() => (
+                  <View className="flex-1">
+                    <Text className="text-lg text-secondary font-poppins-bold">
+                      Parameters
+                    </Text>
+                    <Text className="text-md text-muted font-poppins-medium">
+                      Real-time metrics for water quality parameters.
+                    </Text>
+                  </View>
+                )}
+                icon={() => (
+                  <Image source={icons.setting} style={{ width: 32, height: 32 }} />
+                )}
+                onPress={() => handleStackNav("/parameters")}
+              />
+              <DrawerItem
+                activeTintColor={colors.tertiary}
+                style={{ marginVertical: 4 }}
+                label={() => (
+                  <View className="flex-1">
+                    <Text className="text-lg text-secondary font-poppins-bold">
+                      Notifications
+                    </Text>
+                    <Text className="text-md text-muted font-poppins-medium">
+                      Instant notifications for critical ammonia risks.
+                    </Text>
+                  </View>
+                )}
+                icon={() => (
+                  <Image source={icons.bell} style={{ width: 32, height: 32 }} />
+                )}
+                onPress={() => handleStackNav("/notifications")}
+              />
+            </ScrollView>
+            <SafeAreaView edges={["bottom"]}>
+              <View className="items-center p-8">
+                <PressableScale
+                  onPress={() => {
+                    selectDevice(null);
+                    router.replace("/onboarding");
+                  }}
+                >
+                  <Text className="text-lg text-white font-poppins-medium bg-primary rounded-bg shadow-md shadow-slate-400/30 px-12 py-4">
+                    Disconnect
                   </Text>
-                  <Text className="text-md text-muted font-poppins-medium">
-                    Instant notifications for critical ammonia risks.
-                  </Text>
-                </View>
-              )}
-              icon={() => (
-                <Image source={icons.bell} style={{ width: 32, height: 32 }} />
-              )}
-              onPress={() => router.push("/notifications")}
-            />
-          </ScrollView>
-          <SafeAreaView edges={["bottom"]}>
-            <View className="items-center p-8">
-              <PressableScale
-                onPress={() => {
-                  selectDevice(null);
-                  router.replace("/onboarding");
-                }}
-              >
-                <Text className="text-lg text-white font-poppins-medium bg-primary rounded-bg shadow-md shadow-slate-400/30 px-12 py-4">
-                  Disconnect
-                </Text>
-              </PressableScale>
-            </View>
-          </SafeAreaView>
-        </View>
-      )}
+                </PressableScale>
+              </View>
+            </SafeAreaView>
+          </View>
+        );
+      }}
     >
       {DrawerRoutes.map((route) => (
         <Drawer.Screen
@@ -144,19 +184,6 @@ export default function DrawerLayout() {
           options={{
             title: route.label,
             ...(route.name === "graphs" ? { swipeEnabled: false } : {}),
-            drawerLabel: () => (
-              <View className="flex-1">
-                <Text className="text-lg text-secondary font-poppins-bold">
-                  {route.title}
-                </Text>
-                <Text className="text-md text-muted font-poppins-medium">
-                  {route.description}
-                </Text>
-              </View>
-            ),
-            drawerIcon: () => (
-              <Image source={route.icon} style={{ width: 32, height: 32 }} />
-            ),
           }}
         />
       ))}

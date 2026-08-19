@@ -1,8 +1,6 @@
 name: Push Relay
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:

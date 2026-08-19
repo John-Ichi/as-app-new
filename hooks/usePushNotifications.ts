@@ -30,6 +30,10 @@ export function usePushNotifications() {
   useEffect(() => {
     if (!selectedDevice || !Device.isDevice || Platform.OS === "web") return;
 
+    const storedRef: { current: ReturnType<typeof ref> | null } = {
+      current: null,
+    };
+
     async function register() {
       if (!selectedDevice) return;
 
@@ -57,6 +61,7 @@ export function usePushNotifications() {
         db,
         `devices/${selectedDevice.id}/pushTokens/${sanitizeToken(token)}`,
       );
+      storedRef.current = tokenRef;
       await set(tokenRef, true);
 
       if (Platform.OS === "android") {
@@ -69,6 +74,12 @@ export function usePushNotifications() {
     }
 
     register();
+
+    return () => {
+      if (storedRef.current) {
+        set(storedRef.current, null);
+      }
+    };
   }, [selectedDevice]);
 
   // Listen for foreground notifications

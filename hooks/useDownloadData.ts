@@ -3,8 +3,8 @@ import { generateCsv } from "@/services/csv";
 import { fetchReadings } from "@/services/firebase/graphs";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { Platform } from "react-native";
 import { useState } from "react";
+import { Platform } from "react-native";
 
 const SEVEN_DAYS_LIMIT = 2016;
 
@@ -55,7 +55,7 @@ export function useDownloadData(): {
         file.delete();
       }
     } catch (e) {
-      if (e instanceof Error && !e.message.includes("User")) {
+      if (e instanceof Error && !e.message.includes("user")) {
         console.error("Download failed:", e);
       }
     } finally {

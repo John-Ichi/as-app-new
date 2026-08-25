@@ -17,6 +17,7 @@ export interface WaterQualityData {
   overallStatus: OverallStatus;
   parameters: ParameterReading[];
   predictiveAlert: { risk: RiskLevel };
+  timestamp: number | null;
   isLoading: boolean;
   error: Error | null;
 }

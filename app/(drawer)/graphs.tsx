@@ -5,6 +5,7 @@ import { graphConfig } from "@/constants/graphs";
 import type { ParameterId } from "@/constants/parameters";
 import { parameterIds, parameterMap } from "@/constants/parameters";
 import { useGraphData } from "@/hooks/useGraphData";
+import { isGraphDataEmpty } from "@/services/firebase/graphs";
 import { styled } from "nativewind";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, Text, useWindowDimensions, View } from "react-native";
@@ -42,7 +43,8 @@ const Graphs = () => {
 
   if (error) return <ErrorState message={error.message} />;
   if (isLoading) return <LoadingState />;
-  if (allData.length === 0) return <ErrorState message="No data available." />;
+  if (isGraphDataEmpty(allData))
+    return <ErrorState title="No data available." />;
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
@@ -72,8 +74,12 @@ const Graphs = () => {
             const id = paramData.id;
             const config = graphConfig[id];
             const range = timeRanges[id];
-            const chartData =
+            const rawChartData =
               range === "oneDay" ? paramData.oneDay : paramData.sevenDay;
+            const chartData =
+              range === "oneDay"
+                ? rawChartData.filter((p) => !Number.isNaN(p.value))
+                : rawChartData;
 
             return (
               <ParameterChart

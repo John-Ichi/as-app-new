@@ -5,7 +5,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before 
 # Project Overview
 
 - Mobile/web application for displaying IoT readings
-- Uses React Native/Expo, and possibly Google Firebase
+- Uses React Native/Expo and Google Firebase
 - Languages include JavaScript, TypeScript, and TypeScript with JSX
 
 # Coding Style Guidelines

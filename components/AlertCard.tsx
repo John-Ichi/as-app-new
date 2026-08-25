@@ -53,6 +53,7 @@ const AlertCard = ({
             setLoading(true);
             try {
               await onAcknowledge?.();
+              setAcknowledged(true);
             } catch (error) {
               console.error("Failed to acknowledge:", error);
             } finally {

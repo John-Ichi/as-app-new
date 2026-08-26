@@ -19,6 +19,7 @@ import {
   isOneDayEmpty,
   subscribeRawReadings,
 } from "@/services/firebase/graphs";
+import { formatCellValue, formatTimeAmPm } from "@/utils/format";
 import dayjs from "dayjs";
 import { Redirect } from "expo-router";
 import { styled } from "nativewind";
@@ -34,12 +35,6 @@ import {
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
-
-function formatHour(hour: number): string {
-  const h = hour % 12 || 12;
-  const period = hour < 12 ? "AM" : "PM";
-  return `${h}:00 ${period}`;
-}
 
 const Parameters = () => {
   const { selectedDevice } = useDevice();
@@ -108,12 +103,8 @@ const Parameters = () => {
     new Date(nowHourStart - (23 - i) * 60 * 60 * 1000).getHours(),
   );
   const tableRows = bucketHours.map((hour, i) => ({
-    label: formatHour(hour),
-    values: allData.map((p) => {
-      const v = p.oneDay?.[i]?.value;
-      if (v == null || Number.isNaN(v)) return "-";
-      return p.id === "ammonia" ? v.toFixed(3) : v.toFixed(2);
-    }),
+    label: formatTimeAmPm(hour),
+    values: allData.map((p) => formatCellValue(p.id, p.oneDay?.[i]?.value)),
   }));
 
   const ammonia = allData.find((d) => d.id === "ammonia");

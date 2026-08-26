@@ -23,7 +23,7 @@ const StatCard = ({
     <Text className={`text-md text-primary font-poppins-semibold`}>
       {label}
     </Text>
-    <Text className={`text-lg ${textColor} font-poppins-bold`}>{value}</Text>
+    <Text className={`text-md ${textColor} font-poppins-bold`}>{value}</Text>
     {subLabel && <Text className={subLabelClassName}>{subLabel}</Text>}
   </View>
 );

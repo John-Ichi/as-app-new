@@ -48,10 +48,17 @@ function parseArgs() {
   const args = process.argv.slice(2);
   const opts = {
     device: null,
+    ammonia: null,
   };
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--device" && args[i + 1]) opts.device = args[++i];
+    if (args[i] === "--ammonia" && args[i + 1]) opts.ammonia = Number(args[++i]);
+  }
+
+  if (opts.ammonia !== null && (!Number.isFinite(opts.ammonia) || opts.ammonia < 0)) {
+    console.error("Error: --ammonia must be a non-negative number.");
+    process.exit(1);
   }
 
   return opts;
@@ -80,10 +87,13 @@ function randomInRange(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function generateReading() {
+function generateReading(ammoniaOverride = null) {
   const values = {};
   for (const [param, cfg] of Object.entries(PARAM_RANGES)) {
-    values[param] = round(randomInRange(cfg.min, cfg.max), cfg.decimals);
+    values[param] =
+      param === "ammonia" && ammoniaOverride !== null
+        ? round(ammoniaOverride, cfg.decimals)
+        : round(randomInRange(cfg.min, cfg.max), cfg.decimals);
   }
   return values;
 }
@@ -108,11 +118,12 @@ async function main() {
   }
 
   BASE = url.replace(/\/+$/, "");
-  const { device } = parseArgs();
+  const { device, ammonia } = parseArgs();
   const devices = device ? [device] : ALL_DEVICES;
 
   console.log(`Firebase RTDB: ${BASE}`);
   console.log(`Devices:       ${devices.join(", ")}`);
+  if (ammonia !== null) console.log(`Ammonia:       ${round(ammonia, PARAM_RANGES.ammonia.decimals)} (override)`);
   console.log();
 
   // Calculate time to next 5-minute boundary
@@ -125,7 +136,7 @@ async function main() {
   const ts1 = Date.now();
   console.log(`\n--- Reading at ${new Date(ts1).toLocaleTimeString()} ---`);
   for (const deviceId of devices) {
-    const values = generateReading();
+    const values = generateReading(ammonia);
     await rtdbPut(`/readings/${deviceId}/${ts1}`, values);
     const sec = Math.floor(ts1 / 1000);
     await rtdbPatch(`/latest/${deviceId}`, { ...values, ts: sec });

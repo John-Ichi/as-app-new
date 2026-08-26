@@ -1,14 +1,26 @@
 import DataTable from "@/components/DataTable";
 import PressableScale from "@/components/PressableScale";
+import { ErrorState, LoadingState } from "@/components/StateDisplay";
 import { graphConfig } from "@/constants/graphs";
 import { ParameterId, parameterIds } from "@/constants/parameters";
 import { colors } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
-import { getAllHalfHourData } from "@/services/firebase/graphs";
+import {
+  isBucketDataEmpty,
+  subscribeHalfHour,
+} from "@/services/firebase/graphs";
 import type { GraphDataPoint } from "@/services/types";
+import { formatCellValue } from "@/utils/format";
+import dayjs from "dayjs";
 import { styled } from "nativewind";
 import { useEffect, useState } from "react";
-import { Modal, Text, View, useWindowDimensions } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -21,32 +33,36 @@ interface Props {
 const DataTableModal = ({ visible, onClose }: Props) => {
   const { width: screenWidth } = useWindowDimensions();
   const { selectedDevice } = useDevice();
-  const [allData, setAllData] = useState<
-    { id: ParameterId; points: GraphDataPoint[] }[]
-  >([]);
+  const [buckets, setBuckets] = useState<
+    Record<ParameterId, GraphDataPoint[]> | null
+  >(null);
   const [error, setError] = useState<Error | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+
+  useEffect(() => {
+    setBuckets(null);
+    setError(null);
+    setLastUpdated(null);
+  }, [selectedDevice]);
 
   useEffect(() => {
     if (!selectedDevice || !visible) return;
-    const deviceId = selectedDevice.id;
     let cancelled = false;
-    setAllData([]);
-    setError(null);
-    async function fetchData() {
-      try {
-        const results = await getAllHalfHourData(deviceId);
-        if (!cancelled) setAllData(results);
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err : new Error("Failed to load data."),
-          );
-        }
-      }
-    }
-    fetchData();
+    const unsubscribe = subscribeHalfHour(
+      selectedDevice.id,
+      (data) => {
+        if (cancelled) return;
+        setBuckets(data);
+        setError(null);
+        setLastUpdated(Date.now());
+      },
+      (err) => {
+        if (!cancelled) setError(err);
+      },
+    );
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [selectedDevice, visible]);
 
@@ -54,11 +70,33 @@ const DataTableModal = ({ visible, onClose }: Props) => {
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);
   const colWidth = Math.max(Math.min(naturalWidth, 90), 75);
 
-  const columns = parameterIds.map((id) => graphConfig[id].shortLabel);
-  const rows = Array.from({ length: 48 }, (_, i) => ({
-    label: allData[0]?.points[i]?.label ?? "",
-    values: allData.map(({ points }) => points[i]?.value?.toFixed(2) ?? "-"),
+  const columns = parameterIds.map((id) => graphConfig[id]?.shortLabel ?? id);
+  const labelParamId = parameterIds[0];
+  const rowCount = buckets?.[labelParamId]?.length ?? 48;
+  const rows = Array.from({ length: rowCount }, (_, i) => ({
+    label: buckets?.[labelParamId]?.[i]?.label ?? "",
+    values: parameterIds.map((id) =>
+      formatCellValue(id, buckets?.[id]?.[i]?.value),
+    ),
   }));
+
+  let content;
+  if (error && !buckets) {
+    content = <ErrorState message={error.message} />;
+  } else if (!buckets) {
+    content = <LoadingState />;
+  } else if (isBucketDataEmpty(buckets)) {
+    content = <ErrorState title="No data available." />;
+  } else {
+    content = (
+      <DataTable
+        columns={columns}
+        rows={rows}
+        colWidth={colWidth}
+        nestedScroll
+      />
+    );
+  }
 
   return (
     <Modal
@@ -85,19 +123,23 @@ const DataTableModal = ({ visible, onClose }: Props) => {
             </Text>
           </PressableScale>
         </View>
-        <View className="flex-1 w-full max-w-xl mx-auto px-4 pb-10">
-          {error ? (
-            <Text className="text-lg text-danger font-poppins-bold text-center">
-              {error.message}
+        <View className="flex-row items-center justify-center gap-x-3 px-4 pb-2">
+          {!buckets ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : null}
+          {lastUpdated ? (
+            <Text className="text-sm text-primary font-poppins-regular">
+              Last updated: {dayjs(lastUpdated).format("h:mm A")}
             </Text>
-          ) : (
-            <DataTable
-              columns={columns}
-              rows={rows}
-              colWidth={colWidth}
-              nestedScroll
-            />
-          )}
+          ) : null}
+        </View>
+        <View className="flex-1 w-full max-w-xl mx-auto px-4 pb-10">
+          {content}
+          {error && buckets && !isBucketDataEmpty(buckets) ? (
+            <Text className="text-sm text-danger font-poppins-regular text-center mt-3">
+              Failed to refresh: {error.message}
+            </Text>
+          ) : null}
         </View>
       </SafeAreaView>
     </Modal>

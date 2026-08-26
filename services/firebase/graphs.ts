@@ -1,6 +1,7 @@
 import { parameterIds, type ParameterId } from "@/constants/parameters";
 import { db } from "@/firebase/config";
 import type { GraphDataPoint, ParameterGraphData } from "@/services/types";
+import { formatTimeAmPm } from "@/utils/format";
 import {
   get,
   limitToLast,
@@ -10,6 +11,10 @@ import {
   ref,
   startAt,
 } from "firebase/database";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const HALF_HOUR_MS = 30 * 60 * 1000;
 
 function round(value: number, decimals: number): number {
   const factor = 10 ** decimals;
@@ -64,12 +69,6 @@ function hourlyLabelForHour(hour: number): string | undefined {
   return hour % 2 === 0 ? `${String(hour).padStart(2, "0")}:00` : undefined;
 }
 
-function halfHourLabel(groupKeys: string[]): string {
-  const mid = groupKeys[Math.floor(groupKeys.length / 2)];
-  const d = new Date(Number(mid));
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-
 function dailyLabel(groupKeys: string[]): string | undefined {
   const mid = groupKeys[Math.floor(groupKeys.length / 2)];
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -89,25 +88,27 @@ export async function getRawReadings(
   };
 }
 
-function buildOneDayWallClock(
+function buildWallClockBuckets(
   readings: Record<string, Record<string, number>>,
+  slotMs: number,
+  count: number,
+  labelFn: (slotStart: number) => string | undefined,
 ): Record<ParameterId, GraphDataPoint[]> {
   const now = Date.now();
-  const hourMs = 60 * 60 * 1000;
-  const currentHourStart = Math.floor(now / hourMs) * hourMs;
-  const buckets: number[] = Array.from(
-    { length: 24 },
-    (_, i) => currentHourStart - (23 - i) * hourMs,
+  const currentSlotStart = Math.floor(now / slotMs) * slotMs;
+  const slots: number[] = Array.from(
+    { length: count },
+    (_, i) => currentSlotStart - (count - 1 - i) * slotMs,
   );
 
-  const bucketsByHour = new Map<number, string[]>();
+  const keysBySlot = new Map<number, string[]>();
   for (const key of Object.keys(readings)) {
     const ts = Number(key);
-    const hourStart = Math.floor(ts / hourMs) * hourMs;
-    if (hourStart < buckets[0] || hourStart > buckets[23]) continue;
-    const list = bucketsByHour.get(hourStart) ?? [];
+    const slotStart = Math.floor(ts / slotMs) * slotMs;
+    if (slotStart < slots[0] || slotStart > slots[count - 1]) continue;
+    const list = keysBySlot.get(slotStart) ?? [];
     list.push(key);
-    bucketsByHour.set(hourStart, list);
+    keysBySlot.set(slotStart, list);
   }
 
   const result: Record<ParameterId, GraphDataPoint[]> = {} as Record<
@@ -115,25 +116,38 @@ function buildOneDayWallClock(
     GraphDataPoint[]
   >;
   for (const id of parameterIds) {
-    result[id] = buckets.map((hourStart) => {
-      const groupKeys = bucketsByHour.get(hourStart) ?? [];
+    result[id] = slots.map((slotStart) => {
+      const label = labelFn(slotStart);
+      const groupKeys = keysBySlot.get(slotStart) ?? [];
       if (groupKeys.length === 0) {
-        return {
-          value: NaN,
-          label: hourlyLabelForHour(new Date(hourStart).getHours()),
-        };
+        return { value: NaN, label };
       }
       const avg = round(
-        groupKeys.reduce((sum, k) => sum + readings[k][id], 0) / groupKeys.length,
+        groupKeys.reduce((sum, k) => sum + readings[k][id], 0) /
+          groupKeys.length,
         3,
       );
-      return {
-        value: avg,
-        label: hourlyLabelForHour(new Date(hourStart).getHours()),
-      };
+      return { value: avg, label };
     });
   }
   return result;
+}
+
+function buildOneDayWallClock(
+  readings: Record<string, Record<string, number>>,
+): Record<ParameterId, GraphDataPoint[]> {
+  return buildWallClockBuckets(readings, HOUR_MS, 24, (slotStart) =>
+    hourlyLabelForHour(new Date(slotStart).getHours()),
+  );
+}
+
+function buildHalfHourWallClock(
+  readings: Record<string, Record<string, number>>,
+): Record<ParameterId, GraphDataPoint[]> {
+  return buildWallClockBuckets(readings, HALF_HOUR_MS, 48, (slotStart) => {
+    const d = new Date(slotStart);
+    return formatTimeAmPm(d.getHours(), d.getMinutes());
+  });
 }
 
 export async function getGraphData(
@@ -183,13 +197,13 @@ export function isGraphDataEmpty(data: ParameterGraphData[]): boolean {
   );
 }
 
-export function subscribeRawReadings(
+function subscribeWindowedReadings(
   deviceId: string,
-  id: ParameterId,
-  onData: (data: { keys: string[]; values: number[] }) => void,
+  windowMs: number,
+  onReadings: (readings: Record<string, Record<string, number>>) => void,
   onError: (error: Error) => void,
 ): () => void {
-  const since = Date.now() - 24 * 60 * 60 * 1000;
+  const since = Date.now() - windowMs;
   const q = query(
     ref(db, `readings/${deviceId}`),
     orderByKey(),
@@ -198,13 +212,32 @@ export function subscribeRawReadings(
   return onValue(
     q,
     (snapshot) => {
-      const raw = (snapshot.val() ?? {}) as Record<string, Record<string, number>>;
-      const now = Date.now();
-      const cutoff = now - 24 * 60 * 60 * 1000;
-      const keys = Object.keys(raw)
-        .filter((k) => Number(k) >= cutoff)
-        .sort();
-      onData({ keys, values: keys.map((k) => raw[k][id]) });
+      const raw = (snapshot.val() ?? {}) as Record<
+        string,
+        Record<string, number>
+      >;
+      const cutoff = Date.now() - windowMs;
+      const filtered = Object.fromEntries(
+        Object.entries(raw).filter(([k]) => Number(k) >= cutoff),
+      );
+      onReadings(filtered);
+    },
+    onError,
+  );
+}
+
+export function subscribeRawReadings(
+  deviceId: string,
+  id: ParameterId,
+  onData: (data: { keys: string[]; values: number[] }) => void,
+  onError: (error: Error) => void,
+): () => void {
+  return subscribeWindowedReadings(
+    deviceId,
+    DAY_MS,
+    (readings) => {
+      const keys = Object.keys(readings).sort();
+      onData({ keys, values: keys.map((k) => readings[k][id]) });
     },
     onError,
   );
@@ -215,43 +248,32 @@ export function subscribeOneDay(
   onData: (buckets: Record<ParameterId, GraphDataPoint[]>) => void,
   onError: (error: Error) => void,
 ): () => void {
-  const since = Date.now() - 24 * 60 * 60 * 1000;
-  const q = query(
-    ref(db, `readings/${deviceId}`),
-    orderByKey(),
-    startAt(String(since)),
-  );
-  return onValue(
-    q,
-    (snapshot) => {
-      const raw = (snapshot.val() ?? {}) as Record<string, Record<string, number>>;
-      const now = Date.now();
-      const cutoff = now - 24 * 60 * 60 * 1000;
-      const filtered = Object.fromEntries(
-        Object.entries(raw).filter(([k]) => Number(k) >= cutoff),
-      );
-      onData(buildOneDayWallClock(filtered));
-    },
+  return subscribeWindowedReadings(
+    deviceId,
+    DAY_MS,
+    (readings) => onData(buildOneDayWallClock(readings)),
     onError,
   );
 }
 
-export async function getHalfHourData(
+export function subscribeHalfHour(
   deviceId: string,
-  id: ParameterId,
-): Promise<GraphDataPoint[]> {
-  const raw = await fetchReadings(deviceId, 288);
-  const keys = Object.keys(raw).sort();
-  return averageGroups(keys, raw, id, 6, halfHourLabel);
+  onData: (buckets: Record<ParameterId, GraphDataPoint[]>) => void,
+  onError: (error: Error) => void,
+): () => void {
+  return subscribeWindowedReadings(
+    deviceId,
+    DAY_MS,
+    (readings) => onData(buildHalfHourWallClock(readings)),
+    onError,
+  );
 }
 
-export async function getAllHalfHourData(
-  deviceId: string,
-): Promise<{ id: ParameterId; points: GraphDataPoint[] }[]> {
-  const raw = await fetchReadings(deviceId, 288);
-  const keys = Object.keys(raw).sort();
-  return parameterIds.map((id) => ({
-    id,
-    points: averageGroups(keys, raw, id, 6, halfHourLabel),
-  }));
+export function isBucketDataEmpty(
+  buckets: Record<ParameterId, GraphDataPoint[]>,
+): boolean {
+  return parameterIds.every((id) =>
+    (buckets[id] ?? []).every((pt) => Number.isNaN(pt.value)),
+  );
 }
+

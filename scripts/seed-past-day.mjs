@@ -52,7 +52,7 @@ async function rtdbGet(rtdbPath, shallow = false) {
 // ── Constants ──────────────────────────────────────────
 
 const INTERVAL_MIN = 5;
-const SLOTS = 12; // past hour: 60 / 5
+const SLOTS = 288; // past day: 24 * 60 / 5
 
 const DEVICES = [
   { id: "sensor-1", name: "POND A", location: "Tank A" },
@@ -134,7 +134,7 @@ async function main() {
 
   console.log(`Firebase RTDB: ${BASE}`);
   console.log(`Devices:       ${targets.map((d) => d.id).join(", ")}`);
-  console.log(`Window:        past hour (${new Date(start).toISOString()} → ${new Date(end).toISOString()})`);
+  console.log(`Window:        past day (${new Date(start).toISOString()} → ${new Date(end).toISOString()})`);
   console.log(`Readings:      ${SLOTS} per device (${SLOTS * targets.length} total)`);
   console.log(`Interval:      ${INTERVAL_MIN} minutes`);
   console.log(``);
@@ -182,6 +182,7 @@ async function main() {
     if (newCount > 0) {
       await rtdbPatch(`/readings/${device.id}`, readingsBatch);
 
+      // Update latest/ with final reading + ts
       await rtdbPatch(`/latest/${device.id}`, {
         ...lastValues,
         ts: Math.floor(lastTs / 1000),
@@ -190,7 +191,7 @@ async function main() {
     process.stdout.write("latest ✓\n");
   }
 
-  console.log(`\n✅ Done. ${SLOTS * targets.length} readings written across ${targets.length} device(s).`);
+  console.log(`\n✅ Done.`);
 }
 
 main().catch((err) => {

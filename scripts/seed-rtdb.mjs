@@ -52,6 +52,13 @@ async function rtdbPost(path, data) {
   return res.json();
 }
 
+async function rtdbGet(rtdbPath, shallow = false) {
+  const url = shallow ? `${BASE}${rtdbPath}.json?shallow=true` : `${BASE}${rtdbPath}.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`GET ${rtdbPath}: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
 // ── Constants ──────────────────────────────────────────
 
 const INTERVAL_MIN = 5;
@@ -156,6 +163,7 @@ function generateAlerts(deviceId, readings) {
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
+  const noAlerts = process.argv.includes("--no-alerts");
   loadEnv();
 
   const url = process.env.FIREBASE_RTDB_URL;
@@ -178,6 +186,7 @@ async function main() {
   console.log(`Devices:       ${DEVICES.map((d) => d.id).join(", ")}`);
   console.log(`Readings:      ${TOTAL_READINGS} per device (${TOTAL_READINGS * DEVICES.length} total)`);
   console.log(`Interval:      ${INTERVAL_MIN} minutes`);
+  console.log(`Alerts:        ${noAlerts ? "disabled" : "enabled"}`);
   console.log(``);
 
   if (dryRun) {
@@ -190,17 +199,21 @@ async function main() {
       }
     }
 
-    const sampleReadings = [];
-    for (let i = 0; i < TOTAL_READINGS; i++) {
-      const ts = startDate.getTime() + i * INTERVAL_MIN * 60 * 1000;
-      sampleReadings.push({ ts, values: generateReading(ts, 0, i) });
+    if (!noAlerts) {
+      const sampleReadings = [];
+      for (let i = 0; i < TOTAL_READINGS; i++) {
+        const ts = startDate.getTime() + i * INTERVAL_MIN * 60 * 1000;
+        sampleReadings.push({ ts, values: generateReading(ts, 0, i) });
+      }
+      const sampleAlerts = generateAlerts("sensor-1", sampleReadings);
+      console.log(`\nSample alerts for ${DEVICES[0].id}: ${sampleAlerts.length}`);
+      for (const alert of sampleAlerts.slice(0, 5)) {
+        console.log(`  ${alert.type.toUpperCase()}  ${alert.parameter}: ${alert.value} (threshold: ${alert.threshold})`);
+      }
+      if (sampleAlerts.length > 5) console.log(`  ... and ${sampleAlerts.length - 5} more`);
+    } else {
+      console.log(`\nAlerts disabled (--no-alerts).`);
     }
-    const sampleAlerts = generateAlerts("sensor-1", sampleReadings);
-    console.log(`\nSample alerts for ${DEVICES[0].id}: ${sampleAlerts.length}`);
-    for (const alert of sampleAlerts.slice(0, 5)) {
-      console.log(`  ${alert.type.toUpperCase()}  ${alert.parameter}: ${alert.value} (threshold: ${alert.threshold})`);
-    }
-    if (sampleAlerts.length > 5) console.log(`  ... and ${sampleAlerts.length - 5} more`);
 
     console.log(`\nDry-run complete. Run without --dry-run to write to RTDB.`);
     return;
@@ -218,15 +231,24 @@ async function main() {
 
   // ── Step 2: Generate and write readings + latest ──
   for (const device of DEVICES) {
+    // Fetch existing timestamps to skip
+    const existing = await rtdbGet(`/readings/${device.id}`, true);
+    const existingKeys = existing ? new Set(Object.keys(existing)) : new Set();
+
     const readingsBatch = {};
     let lastTs = 0;
     let lastValues = null;
+    let skipped = 0;
 
     process.stdout.write(`  Generating ${device.id}... `);
 
     for (let day = 0; day < DAYS; day++) {
       for (let slot = 0; slot < SLOTS_PER_DAY; slot++) {
         const ts = startDate.getTime() + day * 86400000 + slot * INTERVAL_MIN * 60 * 1000;
+        if (existingKeys.has(String(ts))) {
+          skipped++;
+          continue;
+        }
         const values = generateReading(ts, day, slot);
         readingsBatch[ts] = values;
         lastTs = ts;
@@ -234,27 +256,33 @@ async function main() {
       }
     }
 
-    process.stdout.write(`${Object.keys(readingsBatch).length} readings → PATCH... `);
-    await rtdbPatch(`/readings/${device.id}`, readingsBatch);
+    const newCount = Object.keys(readingsBatch).length;
+    process.stdout.write(`${newCount} new, ${skipped} skipped → PATCH... `);
 
-    // Update latest/ with final reading + ts
-    await rtdbPatch(`/latest/${device.id}`, {
-      ...lastValues,
-      ts: Math.floor(lastTs / 1000),
-    });
+    if (newCount > 0) {
+      await rtdbPatch(`/readings/${device.id}`, readingsBatch);
+
+      // Update latest/ with final reading + ts
+      await rtdbPatch(`/latest/${device.id}`, {
+        ...lastValues,
+        ts: Math.floor(lastTs / 1000),
+      });
+    }
     process.stdout.write("latest ✓\n");
 
     // ── Step 3: Generate and post alerts ──
-    const deviceReadings = Object.entries(readingsBatch).map(([ts, values]) => ({
-      ts: Number(ts),
-      values,
-    }));
-    const alerts = generateAlerts(device.id, deviceReadings);
+    if (!noAlerts) {
+      const deviceReadings = Object.entries(readingsBatch).map(([ts, values]) => ({
+        ts: Number(ts),
+        values,
+      }));
+      const alerts = generateAlerts(device.id, deviceReadings);
 
-    for (const alert of alerts) {
-      await rtdbPost(`/alerts/${device.id}`, alert);
+      for (const alert of alerts) {
+        await rtdbPost(`/alerts/${device.id}`, alert);
+      }
+      console.log(`  ${device.id}: ${alerts.length} alerts written`);
     }
-    console.log(`  ${device.id}: ${alerts.length} alerts written`);
   }
 
   console.log(`\n✅ Done. ${TOTAL_READINGS * DEVICES.length} readings written across ${DEVICES.length} devices.`);

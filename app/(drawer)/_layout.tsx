@@ -52,7 +52,7 @@ export default function DrawerLayout() {
                 if (unread === 0) return null;
                 return (
                   <View className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center">
-                    <Text className="text-sm text-white font-poppins-bold">
+                    <Text className="text-xs text-white font-poppins-bold">
                       {unread > 99 ? "99+" : unread}
                     </Text>
                   </View>
@@ -88,7 +88,10 @@ export default function DrawerLayout() {
               style={{ paddingTop: insets.top + 16, paddingBottom: 32 }}
             >
               <View className="flex-row items-center">
-                <Image source={icons.logo} style={{ width: 122, height: 122 }} />
+                <Image
+                  source={icons.logo}
+                  style={{ width: 122, height: 122 }}
+                />
                 <View className="flex-1">
                   <Text className="text-xl text-white font-poppins-bold">
                     AmmoSense
@@ -103,7 +106,9 @@ export default function DrawerLayout() {
               {DrawerRoutes.map((route) => (
                 <DrawerItem
                   key={route.name}
-                  focused={props.state.routes[props.state.index].name === route.name}
+                  focused={
+                    props.state.routes[props.state.index].name === route.name
+                  }
                   activeTintColor={colors.tertiary}
                   style={{ marginVertical: 4 }}
                   label={() => (
@@ -117,9 +122,14 @@ export default function DrawerLayout() {
                     </View>
                   )}
                   icon={() => (
-                    <Image source={route.icon} style={{ width: 32, height: 32 }} />
+                    <Image
+                      source={route.icon}
+                      style={{ width: 32, height: 32 }}
+                    />
                   )}
-                  onPress={() => handleDrawerNav(route.name as "index" | "graphs")}
+                  onPress={() =>
+                    handleDrawerNav(route.name as "index" | "graphs")
+                  }
                 />
               ))}
               <DrawerItem
@@ -136,7 +146,10 @@ export default function DrawerLayout() {
                   </View>
                 )}
                 icon={() => (
-                  <Image source={icons.setting} style={{ width: 32, height: 32 }} />
+                  <Image
+                    source={icons.setting}
+                    style={{ width: 32, height: 32 }}
+                  />
                 )}
                 onPress={() => handleStackNav("/parameters")}
               />
@@ -154,7 +167,10 @@ export default function DrawerLayout() {
                   </View>
                 )}
                 icon={() => (
-                  <Image source={icons.bell} style={{ width: 32, height: 32 }} />
+                  <Image
+                    source={icons.bell}
+                    style={{ width: 32, height: 32 }}
+                  />
                 )}
                 onPress={() => handleStackNav("/notifications")}
               />

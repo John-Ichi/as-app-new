@@ -3,8 +3,8 @@ import { generateCsv } from "@/services/csv";
 import { fetchReadings } from "@/services/firebase/graphs";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { Platform } from "react-native";
 import { useState } from "react";
+import { Platform } from "react-native";
 
 const SEVEN_DAYS_LIMIT = 2016;
 
@@ -40,16 +40,24 @@ export function useDownloadData(): {
         const directory = await Directory.pickDirectoryAsync();
         if (!directory) return;
         const file = directory.createFile("ammosense-data.csv", "text/csv");
-        file.write(csv);
+        await file.write(csv);
         return;
       }
 
       const file = new File(Paths.cache, "ammosense-data.csv");
-      file.write(csv);
-      await Sharing.shareAsync(file.uri, {
-        mimeType: "text/csv",
-        UTI: "public.comma-separated-values-text",
-      });
+      await file.write(csv);
+      try {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: "text/csv",
+          UTI: "public.comma-separated-values-text",
+        });
+      } finally {
+        file.delete();
+      }
+    } catch (e) {
+      if (e instanceof Error && !e.message.includes("user")) {
+        console.error("Download failed:", e);
+      }
     } finally {
       setIsDownloading(false);
     }

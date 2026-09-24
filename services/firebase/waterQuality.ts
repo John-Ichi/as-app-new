@@ -19,6 +19,7 @@ export function getWaterQualityData(
           overallStatus: "NORMAL",
           parameters: [],
           predictiveAlert: { risk: "LOW" },
+          timestamp: null,
           isLoading: false,
           error: null,
         });
@@ -38,10 +39,15 @@ export function getWaterQualityData(
       if (ammonia?.status === "critical") overallStatus = "CRITICAL";
       else if (ammonia?.status === "warning") overallStatus = "WARNING";
 
+      const rawTs = data.ts ?? data.timestamp ?? null;
+      const timestamp =
+        rawTs != null ? (rawTs < 1e12 ? rawTs * 1000 : rawTs) : null;
+
       onData({
         overallStatus,
         parameters: readings,
         predictiveAlert: { risk: "LOW" },
+        timestamp,
         isLoading: false,
         error: null,
       });

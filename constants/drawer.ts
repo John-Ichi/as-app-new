@@ -15,4 +15,11 @@ export const DrawerRoutes = [
     description: "Real-time water quality trend visualization.",
     icon: icons.graph,
   },
+  {
+    name: "weather",
+    title: "Weather",
+    label: "Weather Forecast",
+    description: "Stay updated with accurate weather forecasts.",
+    // icon: insert icon
+  },
 ];

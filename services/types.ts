@@ -44,3 +44,28 @@ export interface AppNotification {
   ts: number;
   pushed?: boolean;
 }
+
+export interface GeocodedLocation {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  country_code: string;
+  admin1?: string;
+}
+
+export interface SavedLocation {
+  id: number;
+  name: string;
+  admin1?: string;
+  latitude: number;
+  longitude: number;
+  source?: "device";
+}
+
+export interface WeatherInfo {
+  temperature: number;
+  weatherCode: number;
+  rain24h: number;
+  maxHeatIndex: number;
+}

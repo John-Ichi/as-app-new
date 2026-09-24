@@ -48,6 +48,13 @@ const config: ExpoConfig = {
         icon: "./assets/images/icon.png",
       },
     ],
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission:
+          "Allow $(PRODUCT_NAME) to use your location to show weather for your current location.",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

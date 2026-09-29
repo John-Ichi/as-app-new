@@ -5,7 +5,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const WEATHER_CACHE_KEY = "weather-cache";
-const REFRESH_INTERVAL_MS = 60 * 60 * 1000;
+export const REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 10_000;
 
 interface WeatherCache {
@@ -78,7 +78,12 @@ export function useWeather(
   const hydratedRef = useRef(false);
 
   const doFetch = useCallback(async (opts?: { replace?: boolean }) => {
-    if (abortRef.current && !opts?.replace) return;
+    if (
+      abortRef.current &&
+      !abortRef.current.signal.aborted &&
+      !opts?.replace
+    )
+      return;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;

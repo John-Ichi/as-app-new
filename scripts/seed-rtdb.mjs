@@ -230,6 +230,10 @@ async function main() {
   }
 
   // ── Step 2: Generate and write readings + latest ──
+  const newestTs =
+    startDate.getTime() +
+    (DAYS - 1) * 86400000 +
+    (SLOTS_PER_DAY - 1) * INTERVAL_MIN * 60 * 1000;
   for (const device of DEVICES) {
     // Fetch existing timestamps to skip
     const existing = await rtdbGet(`/readings/${device.id}`, true);
@@ -262,11 +266,14 @@ async function main() {
     if (newCount > 0) {
       await rtdbPatch(`/readings/${device.id}`, readingsBatch);
 
-      // Update latest/ with final reading + ts
-      await rtdbPatch(`/latest/${device.id}`, {
-        ...lastValues,
-        ts: Math.floor(lastTs / 1000),
-      });
+      // Update latest/ only when the newest slot was actually written;
+      // otherwise a partial rerun would regress it to older values.
+      if (lastTs === newestTs) {
+        await rtdbPatch(`/latest/${device.id}`, {
+          ...lastValues,
+          ts: Math.floor(lastTs / 1000),
+        });
+      }
     }
     process.stdout.write("latest ✓\n");
 

@@ -8,7 +8,6 @@ import graph from "@/assets/icons/graph.png";
 import home from "@/assets/icons/home.png";
 import logo from "@/assets/icons/logo.png";
 import partlySunnyDay from "@/assets/icons/partly-sunny-day.png";
-import partlySunny from "@/assets/icons/partly-sunny.png";
 import pH from "@/assets/icons/ph.png";
 import setting from "@/assets/icons/setting.png";
 import temperature from "@/assets/icons/temperature.png";
@@ -32,6 +31,5 @@ export const icons = {
   download,
   criticalAlert,
   warningAlert,
-  partlySunny,
   partlySunnyDay,
 } as const;

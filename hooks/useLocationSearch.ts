@@ -24,6 +24,8 @@ export function useLocationSearch(query: string): LocationSearchState {
     }
 
     const controller = new AbortController();
+    setResults([]);
+    setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(true);
       setError(null);

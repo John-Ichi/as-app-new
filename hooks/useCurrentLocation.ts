@@ -75,12 +75,21 @@ async function resolvePlaceName(
     }
 
     try {
-      const [match] = await searchPhilippineLocations(place, signal);
-      if (match) {
+      const candidates = await searchPhilippineLocations(place, signal);
+      let nearest: (typeof candidates)[number] | null = null;
+      let nearestKm = 25;
+      for (const candidate of candidates) {
+        const km = distanceKm(coords, candidate);
+        if (km < nearestKm) {
+          nearest = candidate;
+          nearestKm = km;
+        }
+      }
+      if (nearest) {
         return {
-          id: match.id,
-          name: match.name,
-          admin1: match.admin1,
+          id: DEVICE_LOCATION_ID,
+          name: nearest.name,
+          admin1: nearest.admin1,
           latitude: coords.latitude,
           longitude: coords.longitude,
           source: "device",

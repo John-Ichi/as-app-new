@@ -124,7 +124,7 @@ const DataTableModal = ({ visible, onClose }: Props) => {
           </PressableScale>
         </View>
         <View className="flex-row items-center justify-center gap-x-3 px-4 pb-2">
-          {!buckets ? (
+          {!buckets && !error ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : null}
           {lastUpdated ? (

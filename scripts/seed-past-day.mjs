@@ -111,7 +111,15 @@ function generateReading(timestamp, dayIndex, slotIndex) {
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
   const deviceArgIdx = process.argv.indexOf("--device");
-  const deviceArg = deviceArgIdx !== -1 ? process.argv[deviceArgIdx + 1] : null;
+  let deviceArg = null;
+  if (deviceArgIdx !== -1) {
+    const next = process.argv[deviceArgIdx + 1];
+    if (!next) {
+      console.error("Error: --device requires a value.");
+      process.exit(1);
+    }
+    deviceArg = next;
+  }
   loadEnv();
 
   const url = process.env.FIREBASE_RTDB_URL;
@@ -182,11 +190,14 @@ async function main() {
     if (newCount > 0) {
       await rtdbPatch(`/readings/${device.id}`, readingsBatch);
 
-      // Update latest/ with final reading + ts
-      await rtdbPatch(`/latest/${device.id}`, {
-        ...lastValues,
-        ts: Math.floor(lastTs / 1000),
-      });
+      // Update latest/ only when the newest slot was actually written;
+      // otherwise a partial rerun would regress it to older values.
+      if (lastTs === end) {
+        await rtdbPatch(`/latest/${device.id}`, {
+          ...lastValues,
+          ts: Math.floor(lastTs / 1000),
+        });
+      }
     }
     process.stdout.write("latest ✓\n");
   }

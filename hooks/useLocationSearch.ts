@@ -37,7 +37,7 @@ export function useLocationSearch(query: string): LocationSearchState {
           setError(err instanceof Error ? err : new Error("Search failed."));
           setIsLoading(false);
         });
-    }, 300);
+    }, 800);
 
     return () => {
       clearTimeout(timer);

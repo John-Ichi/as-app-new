@@ -97,9 +97,11 @@ export async function fetchWeather(
   const params = new URLSearchParams({
     latitude: locations.map((l) => l.latitude).join(","),
     longitude: locations.map((l) => l.longitude).join(","),
-    current: "temperature_2m,weather_code",
+    current:
+      "temperature_2m,weather_code,relative_humidity_2m,precipitation,pressure_msl,wind_speed_10m",
     hourly: "temperature_2m,relative_humidity_2m,precipitation",
     temperature_unit: "celsius",
+    wind_speed_unit: "kmh",
     precipitation_unit: "mm",
     forecast_days: "1",
     past_days: "1",
@@ -128,9 +130,17 @@ export async function fetchWeather(
       todayHumidity.push(humidity[i] ?? null);
     }
 
+    const currentTemp = entry.current.temperature_2m as number;
+    const currentHumidity = entry.current.relative_humidity_2m as number;
     return {
-      temperature: entry.current.temperature_2m as number,
+      temperature: currentTemp,
       weatherCode: entry.current.weather_code as number,
+      humidity: currentHumidity,
+      precipitation: entry.current.precipitation as number,
+      pressure: entry.current.pressure_msl as number,
+      windSpeed: entry.current.wind_speed_10m as number,
+      heatIndex: heatIndexCelsius(currentTemp, currentHumidity),
+      observationTime: nowIso,
       rain24h: rainRolling24h(times, entry.hourly?.precipitation ?? [], nowIso),
       maxHeatIndex: maxHeatIndex(todayTemps, todayHumidity),
     };

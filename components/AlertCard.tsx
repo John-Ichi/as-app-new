@@ -1,14 +1,15 @@
 import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Image, Text, View } from "react-native";
 
 interface AlertCardProps {
   type: "critical" | "warning";
+  alertId: string;
   title: string;
   date: string;
   read: boolean;
-  onAcknowledge?: () => Promise<void>;
+  onAcknowledge?: (id: string) => Promise<void>;
 }
 
 const iconMap = {
@@ -23,6 +24,7 @@ const buttonBgMap = { critical: "bg-danger", warning: "bg-warning" } as const;
 
 const AlertCard = ({
   type,
+  alertId,
   title,
   date,
   read,
@@ -52,7 +54,7 @@ const AlertCard = ({
             if (loading || acknowledged) return;
             setLoading(true);
             try {
-              await onAcknowledge?.();
+              await onAcknowledge?.(alertId);
               setAcknowledged(true);
             } catch (error) {
               console.error("Failed to acknowledge:", error);
@@ -76,4 +78,4 @@ const AlertCard = ({
   );
 };
 
-export default AlertCard;
+export default memo(AlertCard);

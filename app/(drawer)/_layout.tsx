@@ -46,7 +46,10 @@ export default function DrawerLayout() {
             hitSlop={2}
           >
             <View className="relative">
-              <Image source={icons.alert} style={{ width: 24, height: 24 }} />
+              <Image
+                source={icons.alert}
+                style={{ width: 24, height: 24, tintColor: colors.white }}
+              />
               {(() => {
                 const unread = notifications.filter((n) => !n.read).length;
                 if (unread === 0) return null;
@@ -124,7 +127,11 @@ export default function DrawerLayout() {
                   icon={() => (
                     <Image
                       source={route.icon}
-                      style={{ width: 32, height: 32 }}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        tintColor: colors.primary,
+                      }}
                     />
                   )}
                   onPress={() =>
@@ -148,7 +155,7 @@ export default function DrawerLayout() {
                 icon={() => (
                   <Image
                     source={icons.setting}
-                    style={{ width: 32, height: 32 }}
+                    style={{ width: 32, height: 32, tintColor: colors.primary }}
                   />
                 )}
                 onPress={() => handleStackNav("/parameters")}
@@ -169,7 +176,7 @@ export default function DrawerLayout() {
                 icon={() => (
                   <Image
                     source={icons.bell}
-                    style={{ width: 32, height: 32 }}
+                    style={{ width: 32, height: 32, tintColor: colors.primary }}
                   />
                 )}
                 onPress={() => handleStackNav("/notifications")}

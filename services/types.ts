@@ -68,4 +68,10 @@ export interface WeatherInfo {
   weatherCode: number;
   rain24h: number;
   maxHeatIndex: number;
+  humidity: number;
+  precipitation: number;
+  pressure: number;
+  windSpeed: number;
+  heatIndex: number;
+  observationTime: string;
 }

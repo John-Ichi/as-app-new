@@ -1,7 +1,9 @@
 import PressableScale from "@/components/PressableScale";
 import { ErrorState, LoadingState } from "@/components/StateDisplay";
+import { colors } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useDevices } from "@/hooks/useDevices";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, Stack } from "expo-router";
 import { styled } from "nativewind";
 import { FlatList, Text, View } from "react-native";
@@ -25,6 +27,11 @@ const DeviceSelect = () => {
       <ErrorState
         title="No devices available."
         message="Please check your connection or add a device."
+        actionLabel="Return"
+        onAction={() => {
+          selectDevice(null);
+          router.replace("/onboarding");
+        }}
       />
     );
 
@@ -32,6 +39,16 @@ const DeviceSelect = () => {
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
       <View className="w-full max-w-xl mx-auto flex-1 px-4">
+        <View className="flex-row py-2">
+          <PressableScale
+            onPress={() => router.replace("/onboarding")}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.primary} />
+          </PressableScale>
+        </View>
         <Text className="text-xl text-center text-primary font-poppins-bold py-8">
           Select Device
         </Text>

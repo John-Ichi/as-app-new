@@ -20,6 +20,6 @@ export const DrawerRoutes = [
     title: "Weather",
     label: "Weather Forecast",
     description: "Stay updated with accurate weather forecasts.",
-    // icon: insert icon
+    icon: icons.partlySunnyDay,
   },
 ];

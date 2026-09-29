@@ -5,7 +5,8 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const WEATHER_CACHE_KEY = "weather-cache";
-const REFRESH_INTERVAL_MS = 30 * 60 * 1000;
+const REFRESH_INTERVAL_MS = 60 * 60 * 1000;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 interface WeatherCache {
   fetchedAt: number;
@@ -18,6 +19,7 @@ interface WeatherState {
   isFetching: boolean;
   lastUpdated: number | null;
   error: Error | null;
+  refetch: () => boolean;
 }
 
 interface UseWeatherOptions {
@@ -70,10 +72,13 @@ export function useWeather(
   locationsRef.current = locations;
   const lastUpdatedRef = useRef(lastUpdated);
   lastUpdatedRef.current = lastUpdated;
+  const errorRef = useRef(error);
+  errorRef.current = error;
   const abortRef = useRef<AbortController | null>(null);
   const hydratedRef = useRef(false);
 
-  const doFetch = useCallback(async () => {
+  const doFetch = useCallback(async (opts?: { replace?: boolean }) => {
+    if (abortRef.current && !opts?.replace) return;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -81,6 +86,12 @@ export function useWeather(
     const sig = signatureOf(locationsRef.current);
     setIsFetching(true);
     setError(null);
+
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
 
     try {
       const results = await fetchWeather(
@@ -101,12 +112,25 @@ export function useWeather(
       lastUpdatedRef.current = fetchedAt;
       writeWeatherCache({ fetchedAt, signature: sig, data: nextData });
     } catch (err) {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        if (timedOut) {
+          setError(
+            new Error(
+              "Request timed out. Check your connection and try again."
+            )
+          );
+        }
+        return;
+      }
       setError(
         err instanceof Error ? err : new Error("Failed to fetch weather.")
       );
     } finally {
-      if (abortRef.current === controller) setIsFetching(false);
+      clearTimeout(timeoutId);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+        setIsFetching(false);
+      }
     }
   }, []);
 
@@ -138,7 +162,7 @@ export function useWeather(
         !cacheMatches ||
         Date.now() - (cache?.fetchedAt ?? 0) >= REFRESH_INTERVAL_MS;
 
-      if (isStale) await doFetch();
+      if (isStale) await doFetch({ replace: true });
     };
 
     load();
@@ -178,5 +202,19 @@ export function useWeather(
     }, [enabled, signature, doFetch])
   );
 
-  return { data, isFetching, lastUpdated, error };
+  const refetch = useCallback((): boolean => {
+    if (errorRef.current !== null) {
+      void doFetch();
+      return true;
+    }
+    const age =
+      lastUpdatedRef.current !== null
+        ? Date.now() - lastUpdatedRef.current
+        : Number.POSITIVE_INFINITY;
+    if (age < REFRESH_INTERVAL_MS) return false;
+    void doFetch();
+    return true;
+  }, [doFetch]);
+
+  return { data, isFetching, lastUpdated, error, refetch };
 }

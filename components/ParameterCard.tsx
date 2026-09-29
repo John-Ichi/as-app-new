@@ -14,6 +14,11 @@ const ParameterCard = ({ id, value, className = "" }: ParameterCardProps) => {
   const baseClasses =
     "bg-white rounded-sm shadow-md shadow-slate-400/30 justify-between p-4";
   const layoutClasses = wide ? "w-full flex-row items-center" : "w-[48%]";
+  const decimals = id === "ammonia" ? 3 : 2;
+  const display =
+    typeof value === "number" && !Number.isNaN(value)
+      ? value.toFixed(decimals)
+      : String(value);
 
   return (
     <View className={`${layoutClasses} ${baseClasses} ${className} gap-y-4`}>
@@ -26,7 +31,7 @@ const ParameterCard = ({ id, value, className = "" }: ParameterCardProps) => {
         </Text>
       </View>
       <Text className="text-lg text-primary font-poppins-bold">
-        {value} {metadata.unit}
+        {display} {metadata.unit}
       </Text>
     </View>
   );

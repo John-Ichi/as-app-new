@@ -14,6 +14,7 @@ const config: ExpoConfig = {
   },
   android: {
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+    softwareKeyboardLayoutMode: "resize",
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -46,6 +47,13 @@ const config: ExpoConfig = {
       "expo-notifications",
       {
         icon: "./assets/images/icon.png",
+      },
+    ],
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission:
+          "Allow $(PRODUCT_NAME) to use your location to show weather for your current location.",
       },
     ],
   ],

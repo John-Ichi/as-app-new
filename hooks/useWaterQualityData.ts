@@ -14,6 +14,7 @@ interface WaterQualityData {
   overallStatus: "NORMAL" | "WARNING" | "CRITICAL";
   parameters: ParameterReading[];
   predictiveAlert: { risk: "LOW" | "MEDIUM" | "HIGH" };
+  timestamp: number | null;
   isLoading: boolean;
   error: Error | null;
 }
@@ -24,6 +25,7 @@ export function useWaterQualityData(): WaterQualityData {
     overallStatus: "NORMAL",
     parameters: [],
     predictiveAlert: { risk: "LOW" },
+    timestamp: null,
     isLoading: true,
     error: null,
   });

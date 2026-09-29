@@ -5,6 +5,7 @@ import { icons } from "@/constants/icons";
 import { overallStatusBg, riskTextColor } from "@/constants/status";
 import { colors } from "@/constants/theme";
 import { useWaterQualityData } from "@/hooks/useWaterQualityData";
+import dayjs from "dayjs";
 import { router } from "expo-router";
 import { styled } from "nativewind";
 import { Image, ScrollView, Text, View } from "react-native";
@@ -17,6 +18,7 @@ const Dashboard = () => {
     overallStatus,
     parameters: readings,
     predictiveAlert,
+    timestamp,
     isLoading,
     error,
   } = useWaterQualityData();
@@ -39,6 +41,11 @@ const Dashboard = () => {
               {overallStatus}
             </Text>
           </View>
+          {timestamp ? (
+            <Text className="text-sm text-muted font-poppins-regular text-center mt-3">
+              Last updated: {dayjs(timestamp).format("MMM D h:mm A")}
+            </Text>
+          ) : null}
           <View className="mt-6 flex-row flex-wrap justify-between gap-y-5">
             {readings.map((reading) => (
               <ParameterCard
@@ -70,7 +77,7 @@ const Dashboard = () => {
               </View>
               <PressableScale
                 onPress={() => {
-                  router.push("/parameters");
+                  router.navigate("/parameters");
                 }}
                 style={{ borderRadius: 20, paddingLeft: 8, paddingRight: 8 }}
                 pressedStyle={{ backgroundColor: colors.pressed }}

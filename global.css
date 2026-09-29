@@ -68,6 +68,7 @@
   --font-poppins-thin: poppins-thin;
 
   /* define font size */
+  --text-xs: 10px;
   --text-sm: 12px;
   --text-md: 15px;
   --text-lg: 20px;

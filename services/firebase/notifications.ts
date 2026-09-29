@@ -67,3 +67,15 @@ export async function acknowledgeNotification(
   const alertRef = ref(db, `alerts/${deviceId}/${pushId}`);
   await update(alertRef, { read: true });
 }
+
+export async function acknowledgeNotifications(
+  deviceId: string,
+  pushIds: string[],
+): Promise<void> {
+  if (pushIds.length === 0) return;
+  const updates: Record<string, boolean> = {};
+  pushIds.forEach((id) => {
+    updates[`${id}/read`] = true;
+  });
+  await update(ref(db, `alerts/${deviceId}`), updates);
+}

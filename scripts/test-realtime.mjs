@@ -52,8 +52,27 @@ function parseArgs() {
   };
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--device" && args[i + 1]) opts.device = args[++i];
-    if (args[i] === "--ammonia" && args[i + 1]) opts.ammonia = Number(args[++i]);
+    if (args[i] === "--device") {
+      if (!args[i + 1]) {
+        console.error("Error: --device requires a value.");
+        process.exit(1);
+      }
+      opts.device = args[++i];
+    }
+    if (args[i] === "--ammonia") {
+      if (!args[i + 1]) {
+        console.error("Error: --ammonia requires a value.");
+        process.exit(1);
+      }
+      opts.ammonia = Number(args[++i]);
+    }
+  }
+
+  if (opts.device !== null && !ALL_DEVICES.includes(opts.device)) {
+    console.error(
+      `Error: unknown device "${opts.device}". Valid devices: ${ALL_DEVICES.join(", ")}`,
+    );
+    process.exit(1);
   }
 
   if (opts.ammonia !== null && (!Number.isFinite(opts.ammonia) || opts.ammonia < 0)) {

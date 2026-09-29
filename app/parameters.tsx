@@ -55,6 +55,8 @@ const Parameters = () => {
     let cancelled = false;
     setIsRawDataLoading(true);
     setRawDataError(null);
+    setRawData({ keys: [], values: [] });
+    setLastUpdated(null);
     const unsubscribe = subscribeRawReadings(
       selectedDevice.id,
       "ammonia",
@@ -62,7 +64,11 @@ const Parameters = () => {
         if (cancelled) return;
         setRawData(data);
         setRawDataError(null);
-        setLastUpdated(Date.now());
+        setLastUpdated(
+          data.keys.length > 0
+            ? Number(data.keys[data.keys.length - 1])
+            : Date.now(),
+        );
         setIsRawDataLoading(false);
       },
       (err) => {

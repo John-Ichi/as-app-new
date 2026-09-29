@@ -2,6 +2,23 @@ function desanitizeToken(token) {
   return token.replace(/_lb_/g, "[").replace(/_rb_/g, "]");
 }
 
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Request failed (${res.status}): ${url}`);
+  }
+  return res.json();
+}
+
+async function markPushed(url) {
+  const res = await fetch(url, { method: "PUT", body: "true" });
+  if (!res.ok) {
+    console.error(`Failed to mark alert as pushed (${res.status}): ${url}`);
+    return false;
+  }
+  return true;
+}
+
 async function runRelay(env) {
   const { FIREBASE_RTDB_URL, EXPO_ACCESS_TOKEN } = env;
 
@@ -9,8 +26,7 @@ async function runRelay(env) {
     throw new Error("Missing FIREBASE_RTDB_URL or EXPO_ACCESS_TOKEN");
   }
 
-  const devicesResponse = await fetch(`${FIREBASE_RTDB_URL}/devices.json`);
-  const devices = await devicesResponse.json();
+  const devices = await fetchJson(`${FIREBASE_RTDB_URL}/devices.json`);
 
   if (!devices) {
     console.log("No devices found");
@@ -20,10 +36,9 @@ async function runRelay(env) {
   let totalSent = 0;
 
   for (const deviceId of Object.keys(devices)) {
-    const alertsResponse = await fetch(
+    const alerts = await fetchJson(
       `${FIREBASE_RTDB_URL}/alerts/${deviceId}.json?orderBy="read"&equalTo=false`
     );
-    const alerts = await alertsResponse.json();
 
     if (!alerts) continue;
 
@@ -33,10 +48,9 @@ async function runRelay(env) {
 
     if (unpushed.length === 0) continue;
 
-    const tokensResponse = await fetch(
+    const tokens = await fetchJson(
       `${FIREBASE_RTDB_URL}/devices/${deviceId}/pushTokens.json`
     );
-    const tokens = await tokensResponse.json();
 
     if (!tokens) continue;
 
@@ -45,9 +59,8 @@ async function runRelay(env) {
     for (const [alertId, alert] of unpushed) {
       if (!alert.title || alert.parameter == null || alert.value == null) {
         console.warn(`Skipping malformed alert ${alertId} on ${deviceId}`);
-        await fetch(
-          `${FIREBASE_RTDB_URL}/alerts/${deviceId}/${alertId}/pushed.json`,
-          { method: "PUT", body: "true" }
+        await markPushed(
+          `${FIREBASE_RTDB_URL}/alerts/${deviceId}/${alertId}/pushed.json`
         );
         continue;
       }
@@ -71,14 +84,10 @@ async function runRelay(env) {
       });
 
       if (response.ok) {
-        await fetch(
-          `${FIREBASE_RTDB_URL}/alerts/${deviceId}/${alertId}/pushed.json`,
-          {
-            method: "PUT",
-            body: "true",
-          }
+        const marked = await markPushed(
+          `${FIREBASE_RTDB_URL}/alerts/${deviceId}/${alertId}/pushed.json`
         );
-        totalSent++;
+        if (marked) totalSent++;
       }
     }
   }
@@ -88,10 +97,6 @@ async function runRelay(env) {
 
 export default {
   async scheduled(event, env, ctx) {
-    await runRelay(env);
-    return new Response("OK");
-  },
-  async fetch(request, env, ctx) {
     await runRelay(env);
     return new Response("OK");
   },

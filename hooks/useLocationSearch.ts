@@ -26,6 +26,11 @@ export function useLocationSearch(query: string): LocationSearchState {
     const controller = new AbortController();
     setResults([]);
     setIsLoading(true);
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, 10000);
     const timer = setTimeout(() => {
       setIsLoading(true);
       setError(null);
@@ -35,7 +40,17 @@ export function useLocationSearch(query: string): LocationSearchState {
           setIsLoading(false);
         })
         .catch((err) => {
-          if (controller.signal.aborted) return;
+          if (controller.signal.aborted) {
+            if (timedOut) {
+              setError(
+                new Error(
+                  "Search timed out. Check your connection and try again.",
+                ),
+              );
+              setIsLoading(false);
+            }
+            return;
+          }
           setError(err instanceof Error ? err : new Error("Search failed."));
           setIsLoading(false);
         });
@@ -43,6 +58,7 @@ export function useLocationSearch(query: string): LocationSearchState {
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(timeoutId);
       controller.abort();
     };
   }, [query]);

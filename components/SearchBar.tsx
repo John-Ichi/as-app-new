@@ -7,6 +7,7 @@ interface SearchBarProps {
   onChangeText: (text: string) => void;
   onSubmitEditing?: () => void;
   onFocus?: () => void;
+  onBlur?: () => void;
   placeholder?: string;
   className?: string;
 }
@@ -16,6 +17,7 @@ const SearchBar = ({
   onChangeText,
   onSubmitEditing,
   onFocus,
+  onBlur,
   placeholder = "Search location...",
   className = "",
 }: SearchBarProps) => {
@@ -29,6 +31,7 @@ const SearchBar = ({
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}
         onFocus={onFocus}
+        onBlur={onBlur}
         placeholder={placeholder}
         placeholderTextColor={colors.muted}
         returnKeyType="search"

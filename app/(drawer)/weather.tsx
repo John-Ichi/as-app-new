@@ -60,7 +60,7 @@ function handleQueryChange(
   };
 }
 
-function LocationSearchResults({
+function LocationResultsBody({
   search,
   onSelect,
 }: {
@@ -72,6 +72,66 @@ function LocationSearchResults({
   onSelect: (location: SavedLocation) => void;
 }) {
   const { results, isLoading, error } = search;
+  return (
+    <View className="w-full">
+      {isLoading && (
+        <Text className="text-sm text-muted font-poppins-light p-4">
+          Searching...
+        </Text>
+      )}
+      {error && (
+        <Text className="text-sm text-danger font-poppins-light p-4">
+          {error.message}
+        </Text>
+      )}
+      {!isLoading && !error && results.length === 0 && (
+        <Text className="text-sm text-muted font-poppins-light p-4">
+          No locations found.
+        </Text>
+      )}
+      {!isLoading &&
+        results.map((location) => (
+          <PressableScale
+            key={location.id}
+            onPress={() => onSelect(toSavedLocation(location))}
+          >
+            <View className="p-4">
+              <Text className="text-md text-primary font-poppins-medium">
+                {location.name}
+              </Text>
+              <Text className="text-sm text-muted font-poppins-light">
+                {location.admin1 ?? "Philippines"}
+              </Text>
+            </View>
+          </PressableScale>
+        ))}
+    </View>
+  );
+}
+
+function LocationSearchResults({
+  search,
+  onSelect,
+}: {
+  search: {
+    results: GeocodedLocation[];
+    isLoading: boolean;
+    error: Error | null;
+  };
+  onSelect: (location: SavedLocation) => void;
+}) {
+  const list = (
+    <ScrollView
+      keyboardShouldPersistTaps="handled"
+      nestedScrollEnabled
+      style={{ maxHeight: 256 }}
+    >
+      <LocationResultsBody search={search} onSelect={onSelect} />
+    </ScrollView>
+  );
+  if (Platform.OS === "web") {
+    return <View className="bg-white rounded-sm mt-2">{list}</View>;
+  }
   return (
     <View
       style={{
@@ -86,41 +146,7 @@ function LocationSearchResults({
       }}
       className="bg-white rounded-sm"
     >
-      <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
-        <View className="w-full">
-          {isLoading && (
-            <Text className="text-sm text-muted font-poppins-light p-4">
-              Searching...
-            </Text>
-          )}
-          {error && (
-            <Text className="text-sm text-danger font-poppins-light p-4">
-              {error.message}
-            </Text>
-          )}
-          {!isLoading && !error && results.length === 0 && (
-            <Text className="text-sm text-muted font-poppins-light p-4">
-              No locations found.
-            </Text>
-          )}
-          {!isLoading &&
-            results.map((location) => (
-              <PressableScale
-                key={location.id}
-                onPress={() => onSelect(toSavedLocation(location))}
-              >
-                <View className="p-4">
-                  <Text className="text-md text-primary font-poppins-medium">
-                    {location.name}
-                  </Text>
-                  <Text className="text-sm text-muted font-poppins-light">
-                    {location.admin1 ?? "Philippines"}
-                  </Text>
-                </View>
-              </PressableScale>
-            ))}
-        </View>
-      </ScrollView>
+      {list}
     </View>
   );
 }
@@ -209,6 +235,7 @@ const Weather = () => {
   useEffect(
     () => () => {
       if (upToDateTimerRef.current) clearTimeout(upToDateTimerRef.current);
+      if (blurTimer.current) clearTimeout(blurTimer.current);
     },
     [],
   );
@@ -272,6 +299,10 @@ const Weather = () => {
   }, [scrollToSection]);
 
   const handleSearchFocus = (key: "locations" | "observations") => {
+    if (blurTimer.current) {
+      clearTimeout(blurTimer.current);
+      blurTimer.current = null;
+    }
     if (key === "locations") {
       setLocOpen(true);
       setObsOpen(false);
@@ -288,6 +319,14 @@ const Weather = () => {
     setLocOpen(false);
     setObsOpen(false);
   }, []);
+
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchBlur = () => {
+    if (Platform.OS !== "web") return;
+    if (blurTimer.current) clearTimeout(blurTimer.current);
+    blurTimer.current = setTimeout(() => dismissSearch(), 150);
+  };
 
   const resetSearch = useCallback(() => {
     dismissSearch();
@@ -310,6 +349,9 @@ const Weather = () => {
     upToDateTimerRef.current = setTimeout(() => setUpToDate(false), 2000);
   };
 
+  const showResults = locOpen && locationQuery.trim().length >= 2;
+  const showObsResults = obsOpen && observationQuery.trim().length >= 2;
+
   if (
     isLocationLoading ||
     !isHydrated ||
@@ -322,16 +364,12 @@ const Weather = () => {
       <ErrorState message={weather.error.message} onRetry={weather.refetch} />
     );
 
-  const showResults = locOpen && locationQuery.trim().length >= 2;
-
   const handleAddLocation = (location: SavedLocation) => {
     addLocation(location);
     setLocationQuery("");
     clearResults();
     setLocOpen(false);
   };
-
-  const showObsResults = obsOpen && observationQuery.trim().length >= 2;
 
   const handleSelectObservation = (location: SavedLocation) => {
     selectObservation(location, weather.data[location.id] ?? null);
@@ -448,12 +486,16 @@ const Weather = () => {
           contentContainerClassName="pb-10"
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
-          scrollEnabled={!(showResults || showObsResults)}
+          scrollEnabled={
+            Platform.OS === "web" ? true : !(showResults || showObsResults)
+          }
           refreshControl={
             <RefreshControl
               refreshing={weather.isFetching}
               onRefresh={handleRefresh}
-              enabled={!(showResults || showObsResults)}
+              enabled={
+                Platform.OS === "web" ? true : !(showResults || showObsResults)
+              }
               tintColor={colors.white}
               colors={[colors.primary]}
             />
@@ -478,6 +520,7 @@ const Weather = () => {
                   value={locationQuery}
                   onChangeText={handleQueryChange(setLocationQuery, setLocOpen)}
                   onFocus={() => handleSearchFocus("locations")}
+                  onBlur={handleSearchBlur}
                 />
                 {/** results */}
                 {showResults && (
@@ -498,6 +541,7 @@ const Weather = () => {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={Platform.OS === "web"}
+                  contentContainerStyle={{ paddingBottom: 8 }}
                   onLayout={(e) => setCardsWidth(e.nativeEvent.layout.width)}
                 >
                   <View className="flex-row gap-x-4">
@@ -612,6 +656,7 @@ const Weather = () => {
                   )}
                   placeholder="Search observations..."
                   onFocus={() => handleSearchFocus("observations")}
+                  onBlur={handleSearchBlur}
                 />
                 {showObsResults && (
                   <LocationSearchResults
@@ -695,7 +740,7 @@ const Weather = () => {
           {keyboardHeight > 0 && Platform.OS === "android" ? (
             <View style={{ height: keyboardHeight }} />
           ) : null}
-          {(showResults || showObsResults) && (
+          {Platform.OS !== "web" && (showResults || showObsResults) && (
             <Pressable
               onPress={dismissSearch}
               accessibilityRole="button"

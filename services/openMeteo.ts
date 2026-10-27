@@ -99,11 +99,11 @@ export async function fetchWeather(
     longitude: locations.map((l) => l.longitude).join(","),
     current:
       "temperature_2m,weather_code,relative_humidity_2m,precipitation,pressure_msl,wind_speed_10m",
-    hourly: "temperature_2m,relative_humidity_2m,precipitation",
+    hourly: "temperature_2m,relative_humidity_2m,precipitation,weather_code",
     temperature_unit: "celsius",
     wind_speed_unit: "kmh",
     precipitation_unit: "mm",
-    forecast_days: "1",
+    forecast_days: "2",
     past_days: "1",
     timezone: "Asia/Manila",
     models: "ecmwf_ifs025",
@@ -132,6 +132,28 @@ export async function fetchWeather(
 
     const currentTemp = entry.current.temperature_2m as number;
     const currentHumidity = entry.current.relative_humidity_2m as number;
+
+    const hourlyPrecip: (number | null)[] = entry.hourly?.precipitation ?? [];
+    const hourlyCodes: (number | null)[] = entry.hourly?.weather_code ?? [];
+    const nowHourMs =
+      Math.floor(nowIsoHour(nowIso) / 3_600_000) * 3_600_000;
+    let startIndex = times.findIndex(
+      (t) => nowIsoHour(t) > nowHourMs,
+    );
+    if (startIndex === -1) startIndex = times.length;
+    const hourlyForecast = [];
+    for (let i = startIndex; i < startIndex + 6 && i < times.length; i++) {
+      const t = temps[i];
+      const h = humidity[i];
+      if (t == null || h == null) continue;
+      hourlyForecast.push({
+        time: times[i],
+        weatherCode: hourlyCodes[i] ?? 2,
+        precipitation: hourlyPrecip[i] ?? 0,
+        heatIndex: heatIndexCelsius(t, h),
+      });
+    }
+
     return {
       temperature: currentTemp,
       weatherCode: entry.current.weather_code as number,
@@ -143,6 +165,7 @@ export async function fetchWeather(
       observationTime: nowIso,
       rain24h: rainRolling24h(times, entry.hourly?.precipitation ?? [], nowIso),
       maxHeatIndex: maxHeatIndex(todayTemps, todayHumidity),
+      hourlyForecast,
     };
   });
 }

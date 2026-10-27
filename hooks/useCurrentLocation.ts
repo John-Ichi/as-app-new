@@ -9,14 +9,14 @@ import { Platform } from "react-native";
 const DEVICE_LOCATION_ID = -1;
 const FALLBACK_NAME = "Current Location";
 const DEVICE_CACHE_KEY = "device-location-cache";
-const MATCH_RADIUS_KM = 1;
+export const MATCH_RADIUS_KM = 1;
 
 interface Coords {
   latitude: number;
   longitude: number;
 }
 
-function distanceKm(a: Coords, b: Coords): number {
+export function distanceKm(a: Coords, b: Coords): number {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const dLat = toRad(b.latitude - a.latitude);
   const dLon = toRad(b.longitude - a.longitude);

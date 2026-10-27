@@ -4,7 +4,6 @@ import { icons } from "@/constants/icons";
 import { colors, fonts, fontSizes } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useNotifications } from "@/hooks/useNotifications";
-import { DrawerItem } from "@react-navigation/drawer";
 import { Redirect, router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { styled } from "nativewind";
@@ -16,6 +15,53 @@ import {
 } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
+
+interface DrawerRowProps {
+  title: string;
+  description: string;
+  icon: any;
+  focused: boolean;
+  onPress: () => void;
+}
+
+const DrawerRow = ({
+  title,
+  description,
+  icon,
+  focused,
+  onPress,
+}: DrawerRowProps) => (
+  <PressableScale
+    swipeGuard={10}
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={title}
+    style={{
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginVertical: 4,
+      padding: 12,
+      borderRadius: 64,
+      backgroundColor: focused ? "rgba(11, 61, 89, 0.08)" : "transparent",
+    }}
+  >
+    <Image
+      source={icon}
+      style={{ width: 32, height: 32, tintColor: colors.primary }}
+    />
+    <View className="flex-1">
+      <Text
+        className={`text-lg font-poppins-bold ${focused ? "text-primary" : "text-secondary"}`}
+      >
+        {title}
+      </Text>
+      <Text className="text-md text-muted font-poppins-medium">
+        {description}
+      </Text>
+    </View>
+  </PressableScale>
+);
 
 export default function DrawerLayout() {
   const { selectedDevice, selectDevice, isHydrated } = useDevice();
@@ -107,78 +153,31 @@ export default function DrawerLayout() {
             </View>
             <ScrollView className="flex-1 px-4 py-1">
               {DrawerRoutes.map((route) => (
-                <DrawerItem
+                <DrawerRow
                   key={route.name}
+                  title={route.title}
+                  description={route.description}
+                  icon={route.icon}
                   focused={
                     props.state.routes[props.state.index].name === route.name
                   }
-                  activeTintColor={colors.tertiary}
-                  style={{ marginVertical: 4 }}
-                  label={() => (
-                    <View className="flex-1">
-                      <Text className="text-lg text-secondary font-poppins-bold">
-                        {route.title}
-                      </Text>
-                      <Text className="text-md text-muted font-poppins-medium">
-                        {route.description}
-                      </Text>
-                    </View>
-                  )}
-                  icon={() => (
-                    <Image
-                      source={route.icon}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        tintColor: colors.primary,
-                      }}
-                    />
-                  )}
                   onPress={() =>
                     handleDrawerNav(route.name as "index" | "graphs")
                   }
                 />
               ))}
-              <DrawerItem
-                activeTintColor={colors.tertiary}
-                style={{ marginVertical: 4 }}
-                label={() => (
-                  <View className="flex-1">
-                    <Text className="text-lg text-secondary font-poppins-bold">
-                      Parameters
-                    </Text>
-                    <Text className="text-md text-muted font-poppins-medium">
-                      Real-time metrics for water quality parameters.
-                    </Text>
-                  </View>
-                )}
-                icon={() => (
-                  <Image
-                    source={icons.setting}
-                    style={{ width: 32, height: 32, tintColor: colors.primary }}
-                  />
-                )}
+              <DrawerRow
+                title="Parameters"
+                description="Real-time metrics for water quality parameters."
+                icon={icons.setting}
+                focused={false}
                 onPress={() => handleStackNav("/parameters")}
               />
-              <DrawerItem
-                activeTintColor={colors.tertiary}
-                style={{ marginVertical: 4 }}
-                label={() => (
-                  <View className="flex-1">
-                    <Text className="text-lg text-secondary font-poppins-bold">
-                      Notifications
-                    </Text>
-                    <Text className="text-md text-muted font-poppins-medium">
-                      Instant notifications for critical ammonia risks.
-                    </Text>
-                  </View>
-                )}
-                icon={() => (
-                  <Image
-                    source={icons.bell}
-                    style={{ width: 32, height: 32, tintColor: colors.primary }}
-                  />
-                )}
+              <DrawerRow
+                title="Notifications"
+                description="Instant notifications for critical ammonia risks."
+                icon={icons.bell}
+                focused={false}
                 onPress={() => handleStackNav("/notifications")}
               />
             </ScrollView>

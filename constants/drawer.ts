@@ -18,7 +18,7 @@ export const DrawerRoutes = [
   {
     name: "weather",
     title: "Weather",
-    label: "Weather Forecast",
+    label: "Forecast",
     description: "Stay updated with accurate weather forecasts.",
     icon: icons.partlySunnyDay,
   },

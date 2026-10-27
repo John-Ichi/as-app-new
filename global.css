@@ -79,3 +79,24 @@
   --radius-bg: 20px;
   --radius-xl: 32px;
 }
+
+/* compact tier — 6s/SE-class (320–375pt) */
+@media (max-width: 400px) {
+  :root {
+    --text-sm: 9px;
+    --text-md: 12px;
+    --text-lg: 16px;
+    --text-xl: 24px;
+  }
+}
+
+/* large tier — tablets / foldables / desktop web */
+
+@media (min-width: 768px) {
+  :root {
+    --text-sm: 13px;
+    --text-md: 16px;
+    --text-lg: 16px;
+    --text-xl: 28px;
+  }
+}

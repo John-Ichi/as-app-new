@@ -9,6 +9,7 @@ interface SavedLocationsState {
   isHydrated: boolean;
   addLocation: (location: SavedLocation) => void;
   seedDeviceLocation: (location: SavedLocation) => void;
+  removeLocation: (id: number) => void;
 }
 
 export function isSavedLocation(value: unknown): value is SavedLocation {
@@ -82,5 +83,15 @@ export function useSavedLocations(): SavedLocationsState {
     ]);
   }, []);
 
-  return { savedLocations, isHydrated, addLocation, seedDeviceLocation };
+  const removeLocation = useCallback((id: number) => {
+    setSavedLocations((prev) => prev.filter((loc) => loc.id !== id));
+  }, []);
+
+  return {
+    savedLocations,
+    isHydrated,
+    addLocation,
+    seedDeviceLocation,
+    removeLocation,
+  };
 }

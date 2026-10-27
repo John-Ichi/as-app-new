@@ -28,24 +28,26 @@ const Dashboard = () => {
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
+      <View className="w-full h-16 bg-primary rounded-b-xl"></View>
+      <View className="w-full max-w-xl mx-auto">
+        <View
+          className={`${overallStatusBg[overallStatus]} -mt-14 mx-12 py-4 rounded-xl shadow-md shadow-slate-400/30 items-center justify-center`}
+        >
+          <Text className="text-lg text-white font-poppins-medium">
+            OVERALL AMMONIA STATUS
+          </Text>
+          <Text className="text-xl text-white font-poppins-bold">
+            {overallStatus}
+          </Text>
+        </View>
+        {timestamp ? (
+          <Text className="text-sm text-muted font-poppins-regular text-center mt-3">
+            Last updated: {dayjs(timestamp).format("MMM D h:mm A")}
+          </Text>
+        ) : null}
+      </View>
       <ScrollView className="flex-1" contentContainerClassName="pb-10">
-        <View className="w-full h-16 bg-primary rounded-b-xl"></View>
         <View className="w-full max-w-xl mx-auto px-4">
-          <View
-            className={`${overallStatusBg[overallStatus]} -mt-14 mx-12 py-4 rounded-xl shadow-md shadow-slate-400/30 items-center justify-center`}
-          >
-            <Text className="text-lg text-white font-poppins-medium">
-              OVERALL AMMONIA STATUS
-            </Text>
-            <Text className="text-xl text-white font-poppins-bold">
-              {overallStatus}
-            </Text>
-          </View>
-          {timestamp ? (
-            <Text className="text-sm text-muted font-poppins-regular text-center mt-3">
-              Last updated: {dayjs(timestamp).format("MMM D h:mm A")}
-            </Text>
-          ) : null}
           <View className="mt-6 flex-row flex-wrap justify-between gap-y-5">
             {readings.map((reading) => (
               <ParameterCard

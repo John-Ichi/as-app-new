@@ -18,11 +18,19 @@ const Onboarding = () => {
       <Stack.Screen options={{ headerShown: false }} />
       <View className="w-full max-w-xl mx-auto flex-1">
         <View className="flex-1 items-center justify-center">
-          <Image source={icons.logo} style={{ height: 320, width: 320 }} />
-          <Text className="text-xl text-primary font-poppins-bold">
+          <Image
+            source={icons.logo}
+            style={{
+              height: 240,
+              width: "80%",
+              maxWidth: 240,
+              resizeMode: "contain",
+            }}
+          />
+          <Text className="text-xl text-primary text-center font-poppins-bold">
             Welcome to AmmoSense!
           </Text>
-          <Text className="text-lg text-muted font-poppins-semibold">
+          <Text className="text-lg text-muted text-center font-poppins-semibold">
             Predictive Water Quality Monitoring
           </Text>
         </View>
@@ -31,9 +39,9 @@ const Onboarding = () => {
             onPress={() =>
               router.push(selectedDevice ? "/(drawer)" : "/device-select")
             }
-            className="w-[66%]"
+            className="w-[40%] bg-primary rounded-xl"
           >
-            <View className="bg-primary rounded-xl p-4">
+            <View className="p-4">
               <Text className="text-white text-center text-lg font-poppins-semibold">
                 Continue
               </Text>

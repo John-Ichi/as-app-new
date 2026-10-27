@@ -16,7 +16,9 @@ interface SelectedObservationState {
   selection: SavedLocation | null;
   storedWeather: WeatherInfo | null;
   isHydrated: boolean;
+  fetchedAt: number | null;
   select: (location: SavedLocation, weather: WeatherInfo | null) => void;
+  deselect: () => void;
 }
 
 function isWeatherInfo(value: unknown): value is WeatherInfo {
@@ -32,7 +34,8 @@ function isWeatherInfo(value: unknown): value is WeatherInfo {
     typeof info.pressure === "number" &&
     typeof info.windSpeed === "number" &&
     typeof info.heatIndex === "number" &&
-    typeof info.observationTime === "string"
+    typeof info.observationTime === "string" &&
+    Array.isArray(info.hourlyForecast)
   );
 }
 
@@ -67,6 +70,7 @@ export function useSelectedObservation(): SelectedObservationState {
   const [selection, setSelection] = useState<SavedLocation | null>(null);
   const [storedWeather, setStoredWeather] = useState<WeatherInfo | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -79,6 +83,7 @@ export function useSelectedObservation(): SelectedObservationState {
           Date.now() - stored.fetchedAt < REFRESH_INTERVAL_MS
         ) {
           setStoredWeather(stored.weather);
+          setFetchedAt(stored.fetchedAt);
         }
       }
       setIsHydrated(true);
@@ -92,13 +97,29 @@ export function useSelectedObservation(): SelectedObservationState {
     (location: SavedLocation, weather: WeatherInfo | null) => {
       setSelection(location);
       setStoredWeather(weather);
+      const timestamp = Date.now();
+      setFetchedAt(timestamp);
       AsyncStorage.setItem(
         OBSERVATION_SELECTION_KEY,
-        JSON.stringify({ location, weather, fetchedAt: Date.now() }),
+        JSON.stringify({ location, weather, fetchedAt: timestamp }),
       ).catch(() => {});
     },
     [],
   );
 
-  return { selection, storedWeather, isHydrated, select };
+  const deselect = useCallback(() => {
+    setSelection(null);
+    setStoredWeather(null);
+    setFetchedAt(null);
+    AsyncStorage.removeItem(OBSERVATION_SELECTION_KEY).catch(() => {});
+  }, []);
+
+  return {
+    selection,
+    storedWeather,
+    isHydrated,
+    fetchedAt,
+    select,
+    deselect,
+  };
 }

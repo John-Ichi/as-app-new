@@ -63,6 +63,13 @@ export interface SavedLocation {
   source?: "device";
 }
 
+export interface HourlyForecast {
+  time: string;
+  weatherCode: number;
+  precipitation: number;
+  heatIndex: number;
+}
+
 export interface WeatherInfo {
   temperature: number;
   weatherCode: number;
@@ -74,4 +81,5 @@ export interface WeatherInfo {
   windSpeed: number;
   heatIndex: number;
   observationTime: string;
+  hourlyForecast: HourlyForecast[];
 }

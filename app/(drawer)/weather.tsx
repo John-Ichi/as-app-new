@@ -217,13 +217,29 @@ const Weather = () => {
   const [obsNow, setObsNow] = useState(Date.now());
   useFocusEffect(
     useCallback(() => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+
+      const schedule = (delayMs: number) => {
+        timer = setTimeout(() => {
+          setObsNow(Date.now());
+          // A successful fetch updates obsFetchedAt, which re-runs this callback
+          // and reschedules from the new expiry. If no fetch happened (failure,
+          // or cached saved-location weather), fall back to the normal cadence.
+          schedule(REFRESH_INTERVAL_MS);
+        }, delayMs);
+      };
+
       setObsNow(Date.now()); // stale check immediately on focus
-      const tick = setInterval(
-        () => setObsNow(Date.now()),
-        REFRESH_INTERVAL_MS,
-      );
-      return () => clearInterval(tick);
-    }, []),
+      const expiry =
+        obsFetchedAt !== null
+          ? obsFetchedAt + REFRESH_INTERVAL_MS
+          : Date.now() + REFRESH_INTERVAL_MS;
+      schedule(Math.max(0, expiry - Date.now()));
+
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
+    }, [obsFetchedAt]),
   );
 
   useEffect(() => {

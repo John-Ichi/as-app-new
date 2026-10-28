@@ -84,21 +84,27 @@ async function rtdbPutConditional(rtdbPath, data, etag) {
   });
 }
 
+function toEpochSeconds(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  // Same heuristic as the app: values >= 1e12 are milliseconds.
+  return value < 1e12 ? value : value / 1000;
+}
+
 async function updateLatestIfNewer(deviceId, tsMs, values) {
   const rtdbPath = `/latest/${deviceId}`;
   const candidateTs = Math.floor(tsMs / 1000);
 
   for (let attempt = 0; attempt < 3; attempt++) {
     const { data, etag } = await rtdbGetWithEtag(rtdbPath);
-    const storedTs = typeof data?.ts === "number" ? data.ts : null;
+    const existing = data && typeof data === "object" ? data : {};
+    const storedTs =
+      toEpochSeconds(existing.ts) ?? toEpochSeconds(existing.timestamp);
     // Write only when strictly newer; equal/older must not regress latest.
     if (storedTs !== null && candidateTs <= storedTs) return false;
 
-    const res = await rtdbPutConditional(
-      rtdbPath,
-      { ...values, ts: candidateTs },
-      etag,
-    );
+    // PUT replaces the node, so carry over any existing fields.
+    const payload = { ...existing, ...values, ts: candidateTs };
+    const res = await rtdbPutConditional(rtdbPath, payload, etag);
     if (res.status === 412) continue; // concurrent writer won; re-read and retry
     if (!res.ok)
       throw new Error(`PUT ${rtdbPath}: ${res.status} ${await res.text()}`);

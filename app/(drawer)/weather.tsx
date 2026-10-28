@@ -11,10 +11,7 @@ import {
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useSelectedObservation } from "@/hooks/useSelectedObservation";
-import {
-  REFRESH_INTERVAL_MS,
-  useWeather,
-} from "@/hooks/useWeather";
+import { REFRESH_INTERVAL_MS, useWeather } from "@/hooks/useWeather";
 import { fetchWeather } from "@/services/openMeteo";
 import type {
   GeocodedLocation,
@@ -212,13 +209,19 @@ const Weather = () => {
 
   const selectedObsId = selectedObservation?.id ?? null;
   const savedObsWeather =
-    selectedObsId !== null ? weather.data[selectedObsId] : undefined;
+    selectedObsId !== null &&
+    savedLocations.some((loc) => loc.id === selectedObsId)
+      ? weather.data[selectedObsId]
+      : undefined;
 
   const [obsNow, setObsNow] = useState(Date.now());
   useFocusEffect(
     useCallback(() => {
       setObsNow(Date.now()); // stale check immediately on focus
-      const tick = setInterval(() => setObsNow(Date.now()), REFRESH_INTERVAL_MS);
+      const tick = setInterval(
+        () => setObsNow(Date.now()),
+        REFRESH_INTERVAL_MS,
+      );
       return () => clearInterval(tick);
     }, []),
   );
@@ -270,7 +273,14 @@ const Weather = () => {
     return () => {
       controller.abort();
     };
-  }, [selectedObservation, savedObsWeather, storedWeather, obsFetchedAt, obsNow, selectObservation]);
+  }, [
+    selectedObservation,
+    savedObsWeather,
+    storedWeather,
+    obsFetchedAt,
+    obsNow,
+    selectObservation,
+  ]);
 
   const [upToDate, setUpToDate] = useState(false);
   const upToDateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -420,18 +430,26 @@ const Weather = () => {
     // geocoder and the Open-Meteo geocoder rarely agree on both.
     const deviceLoc = savedLocations.find((loc) => loc.source === "device");
     if (deviceLoc && deviceLoc.id !== location.id) {
-      const nameMatches =
-        deviceLoc.name === location.name &&
-        deviceLoc.admin1 === location.admin1;
-      if (nameMatches || distanceKm(location, deviceLoc) < MATCH_RADIUS_KM) {
-        selectObservation(deviceLoc, weather.data[deviceLoc.id] ?? null);
+      // const nameMatches =
+      // deviceLoc.name === location.name &&
+      // deviceLoc.admin1 === location.admin1;
+      if (distanceKm(location, deviceLoc) < MATCH_RADIUS_KM) {
+        selectObservation(
+          deviceLoc,
+          weather.data[deviceLoc.id] ?? null,
+          weather.lastUpdated,
+        );
         setObservationQuery("");
         obsSearch.clearResults();
         setObsOpen(false);
         return;
       }
     }
-    selectObservation(location, weather.data[location.id] ?? null);
+    selectObservation(
+      location,
+      weather.data[location.id] ?? null,
+      weather.lastUpdated,
+    );
     setObservationQuery("");
     obsSearch.clearResults();
     setObsOpen(false);

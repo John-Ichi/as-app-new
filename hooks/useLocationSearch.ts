@@ -24,6 +24,7 @@ export function useLocationSearch(query: string): LocationSearchState {
     }
 
     const controller = new AbortController();
+    let active = true;
     setResults([]);
     setIsLoading(true);
     let timedOut = false;
@@ -36,10 +37,12 @@ export function useLocationSearch(query: string): LocationSearchState {
       setError(null);
       searchPhilippineLocations(trimmed, controller.signal)
         .then((locations) => {
+          if (!active) return;
           setResults(locations);
           setIsLoading(false);
         })
         .catch((err) => {
+          if (!active) return;
           if (controller.signal.aborted) {
             if (timedOut) {
               setError(
@@ -57,6 +60,7 @@ export function useLocationSearch(query: string): LocationSearchState {
     }, 800);
 
     return () => {
+      active = false;
       clearTimeout(timer);
       clearTimeout(timeoutId);
       controller.abort();

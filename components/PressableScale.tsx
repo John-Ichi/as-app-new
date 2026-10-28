@@ -71,9 +71,9 @@ const PressableScale = ({
           ...pressedStyle,
         },
       ]}
+      {...props}
       onPressIn={handlePressIn}
       onPress={handlePress}
-      {...props}
     />
   );
 };

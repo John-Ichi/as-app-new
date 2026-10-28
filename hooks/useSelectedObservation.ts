@@ -17,7 +17,11 @@ interface SelectedObservationState {
   storedWeather: WeatherInfo | null;
   isHydrated: boolean;
   fetchedAt: number | null;
-  select: (location: SavedLocation, weather: WeatherInfo | null) => void;
+  select: (
+    location: SavedLocation,
+    weather: WeatherInfo | null,
+    weatherFetchedAt?: number | null,
+  ) => void;
   deselect: () => void;
 }
 
@@ -94,10 +98,14 @@ export function useSelectedObservation(): SelectedObservationState {
   }, []);
 
   const select = useCallback(
-    (location: SavedLocation, weather: WeatherInfo | null) => {
+    (
+      location: SavedLocation,
+      weather: WeatherInfo | null,
+      weatherFetchedAt?: number | null,
+    ) => {
       setSelection(location);
       setStoredWeather(weather);
-      const timestamp = Date.now();
+      const timestamp = weatherFetchedAt ?? Date.now();
       setFetchedAt(timestamp);
       AsyncStorage.setItem(
         OBSERVATION_SELECTION_KEY,

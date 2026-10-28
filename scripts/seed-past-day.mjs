@@ -49,6 +49,54 @@ async function rtdbGet(rtdbPath, shallow = false) {
   return res.json();
 }
 
+async function rtdbGetWithEtag(rtdbPath) {
+  const res = await fetch(`${BASE}${rtdbPath}.json`, {
+    headers: { "X-Firebase-ETag": "true" },
+  });
+  if (!res.ok) throw new Error(`GET ${rtdbPath}: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  // RTDB uses the literal "null_etag" when the location is empty.
+  return {
+    data,
+    etag: res.headers.get("ETag") ?? (data === null ? "null_etag" : null),
+  };
+}
+
+// Conditional writes only work with PUT/DELETE in RTDB (PATCH returns 400),
+// so this replaces the whole /latest/<device> node.
+async function rtdbPutConditional(rtdbPath, data, etag) {
+  const headers = { "Content-Type": "application/json" };
+  if (etag) headers["if-match"] = etag;
+  return fetch(`${BASE}${rtdbPath}.json`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(data),
+  });
+}
+
+async function updateLatestIfNewer(deviceId, tsMs, values) {
+  const rtdbPath = `/latest/${deviceId}`;
+  const candidateTs = Math.floor(tsMs / 1000);
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data, etag } = await rtdbGetWithEtag(rtdbPath);
+    const storedTs = typeof data?.ts === "number" ? data.ts : null;
+    // Write only when strictly newer; equal/older must not regress latest.
+    if (storedTs !== null && candidateTs <= storedTs) return false;
+
+    const res = await rtdbPutConditional(
+      rtdbPath,
+      { ...values, ts: candidateTs },
+      etag,
+    );
+    if (res.status === 412) continue; // concurrent writer won; re-read and retry
+    if (!res.ok)
+      throw new Error(`PUT ${rtdbPath}: ${res.status} ${await res.text()}`);
+    return true;
+  }
+  return false;
+}
+
 // ── Constants ──────────────────────────────────────────
 
 const INTERVAL_MIN = 5;
@@ -190,14 +238,9 @@ async function main() {
     if (newCount > 0) {
       await rtdbPatch(`/readings/${device.id}`, readingsBatch);
 
-      // Update latest/ only when the newest slot was actually written;
-      // otherwise a partial rerun would regress it to older values.
-      if (lastTs === end) {
-        await rtdbPatch(`/latest/${device.id}`, {
-          ...lastValues,
-          ts: Math.floor(lastTs / 1000),
-        });
-      }
+      // Only advance latest/ when this batch is newer than what's stored, so a
+      // partial rerun can't regress it to older values.
+      await updateLatestIfNewer(device.id, lastTs, lastValues);
     }
     process.stdout.write("latest ✓\n");
   }

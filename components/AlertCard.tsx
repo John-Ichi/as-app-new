@@ -51,10 +51,10 @@ const AlertCard = ({
           disabled={loading || acknowledged}
           style={loading ? { opacity: 0.7 } : undefined}
           onPress={async () => {
-            if (loading || acknowledged) return;
+            if (loading || acknowledged || !onAcknowledge) return;
             setLoading(true);
             try {
-              await onAcknowledge?.(alertId);
+              await onAcknowledge(alertId);
               setAcknowledged(true);
             } catch (error) {
               console.error("Failed to acknowledge:", error);

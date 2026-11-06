@@ -7,6 +7,7 @@ export const parameterIds = [
   "dissolvedOxygen",
   "pH",
   "turbidity",
+  "salinity",
 ] as const;
 
 export type ParameterId = (typeof parameterIds)[number];
@@ -16,9 +17,7 @@ export interface ParameterMetaData {
   label: string;
   unit: string;
   icon: ImageSourcePropType;
-  fullWidth?: boolean;
   threshold?: {
-    warning: number;
     critical: number;
   };
 }
@@ -30,8 +29,7 @@ export const parameters: ParameterMetaData[] = [
     unit: "ppm",
     icon: icons.ammonia,
     threshold: {
-      warning: 0.06,
-      critical: 0.2,
+      critical: 0.06,
     },
   },
   {
@@ -57,7 +55,12 @@ export const parameters: ParameterMetaData[] = [
     label: "TURBIDITY",
     unit: "NTU",
     icon: icons.turbidity,
-    fullWidth: true,
+  },
+  {
+    id: "salinity",
+    label: "SALINITY",
+    unit: "ppt",
+    icon: icons.salinity,
   },
 ];
 

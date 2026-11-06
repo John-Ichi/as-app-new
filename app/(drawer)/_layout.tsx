@@ -1,18 +1,15 @@
 import PressableScale from "@/components/PressableScale";
 import { DrawerRoutes } from "@/constants/drawer";
 import { icons } from "@/constants/icons";
-import { colors, fonts, fontSizes } from "@/constants/theme";
+import { colors } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifs } from "@/hooks/useNotifs";
 import { Redirect, router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { styled } from "nativewind";
 import { useRef } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
-import {
-  SafeAreaView as RNSafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -32,7 +29,6 @@ const DrawerRow = ({
   onPress,
 }: DrawerRowProps) => (
   <PressableScale
-    swipeGuard={10}
     onPress={onPress}
     accessibilityRole="button"
     accessibilityLabel={title}
@@ -43,8 +39,9 @@ const DrawerRow = ({
       marginVertical: 4,
       padding: 12,
       borderRadius: 64,
-      backgroundColor: focused ? "rgba(11, 61, 89, 0.08)" : "transparent",
+      backgroundColor: `${focused ? colors.tertiary_light : "transparent"}`,
     }}
+    swipeGuard={10}
   >
     <Image
       source={icon}
@@ -52,7 +49,7 @@ const DrawerRow = ({
     />
     <View className="flex-1">
       <Text
-        className={`text-lg font-poppins-bold ${focused ? "text-primary" : "text-secondary"}`}
+        className={`${focused ? "text-primary" : "text-secondary"} text-lg font-poppins-bold`}
       >
         {title}
       </Text>
@@ -63,10 +60,9 @@ const DrawerRow = ({
   </PressableScale>
 );
 
-export default function DrawerLayout() {
+const DrawerLayout = () => {
   const { selectedDevice, selectDevice, isHydrated } = useDevice();
-  const insets = useSafeAreaInsets();
-  const { data: notifications } = useNotifications();
+  const { data: notifications } = useNotifs();
   const lastNav = useRef(0);
 
   if (!isHydrated) return null;
@@ -75,29 +71,33 @@ export default function DrawerLayout() {
   return (
     <Drawer
       screenOptions={{
-        drawerActiveTintColor: colors.tertiary,
-        drawerStyle: { width: 360 },
-        drawerItemStyle: { marginVertical: 4 },
         headerStyle: { backgroundColor: colors.primary },
-        headerTitleStyle: { fontFamily: fonts.bold, fontSize: fontSizes.large },
+        headerTitle: ({ children }) => (
+          <Text className="text-lg text-white font-poppins-bold">
+            {children}
+          </Text>
+        ),
         headerTintColor: colors.white,
         headerShadowVisible: false,
         headerRight: () => (
+          /** header notification button */
           <PressableScale
-            onPress={() => router.navigate("/notifications")}
-            style={{ borderRadius: 20, marginRight: 8, padding: 8 }}
+            onPress={() => router.navigate("/notifs")}
+            style={{ borderRadius: 20, padding: 8, marginHorizontal: 8 }}
             pressedStyle={{ backgroundColor: colors.pressed }}
-            accessibilityLabel="Notifications"
             accessibilityRole="button"
+            accessibilityLabel="Notifications"
             hitSlop={2}
           >
-            <View className="relative">
+            <View>
               <Image
                 source={icons.alert}
                 style={{ width: 24, height: 24, tintColor: colors.white }}
               />
               {(() => {
-                const unread = notifications.filter((n) => !n.read).length;
+                const unread = notifications.filter(
+                  (notif) => notif.read !== true,
+                ).length;
                 if (unread === 0) return null;
                 return (
                   <View className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center">
@@ -112,9 +112,10 @@ export default function DrawerLayout() {
         ),
       }}
       drawerContent={(props) => {
-        const handleDrawerNav = (route: "index" | "graphs") => {
+        const COOLDOWN_WINDOW = 300;
+        const handleDrawerNav = (route: "index" | "graphs" | "weather") => {
           const now = Date.now();
-          if (now - lastNav.current < 300) return;
+          if (now - lastNav.current < COOLDOWN_WINDOW) return;
           lastNav.current = now;
           props.navigation.closeDrawer();
           setTimeout(() => {
@@ -122,20 +123,19 @@ export default function DrawerLayout() {
           }, 50);
         };
 
-        const handleStackNav = (path: "/parameters" | "/notifications") => {
+        const handleStackNav = (
+          path: "/parameters" | "/notifications" | "/notifs",
+        ) => {
           const now = Date.now();
-          if (now - lastNav.current < 300) return;
+          if (now - lastNav.current < COOLDOWN_WINDOW) return;
           lastNav.current = now;
           props.navigation.closeDrawer();
           setTimeout(() => router.navigate(path), 50);
         };
 
         return (
-          <View className="flex-1 bg-background">
-            <View
-              className="bg-primary px-4"
-              style={{ paddingTop: insets.top + 16, paddingBottom: 32 }}
-            >
+          <SafeAreaView className="flex-1 bg-primary">
+            <View className="py-8">
               <View className="flex-row items-center">
                 <Image
                   source={icons.logo}
@@ -151,7 +151,7 @@ export default function DrawerLayout() {
                 </View>
               </View>
             </View>
-            <ScrollView className="flex-1 px-4 py-1">
+            <ScrollView className="flex-1 bg-background px-4 py-2">
               {DrawerRoutes.map((route) => (
                 <DrawerRow
                   key={route.name}
@@ -173,29 +173,40 @@ export default function DrawerLayout() {
                 focused={false}
                 onPress={() => handleStackNav("/parameters")}
               />
+
+              {/** previous notification drawer item */}
               <DrawerRow
-                title="Notifications"
+                title="Notifications (old)"
                 description="Instant notifications for critical ammonia risks."
                 icon={icons.bell}
                 focused={false}
                 onPress={() => handleStackNav("/notifications")}
               />
+
+              <DrawerRow
+                title="Notifications (new)"
+                description="Instant notifications for critical ammonia risks."
+                icon={icons.bell}
+                focused={false}
+                onPress={() => handleStackNav("/notifs")}
+              />
             </ScrollView>
-            <SafeAreaView edges={["bottom"]}>
-              <View className="items-center p-8">
-                <PressableScale
-                  onPress={() => {
-                    selectDevice(null);
-                    router.replace("/onboarding");
-                  }}
-                >
-                  <Text className="text-lg text-white font-poppins-medium bg-primary rounded-bg shadow-md shadow-slate-400/30 px-12 py-4">
-                    Disconnect
-                  </Text>
-                </PressableScale>
-              </View>
-            </SafeAreaView>
-          </View>
+            <View className="bg-background items-center py-4">
+              <PressableScale
+                onPress={() => {
+                  selectDevice(null);
+                  router.replace("/onboarding");
+                }}
+              >
+                <Text className="text-lg text-white text-center font-poppins-medium bg-primary rounded-lg shadow-md shadow-slate-400/30 px-12 py-4">
+                  Disconnect
+                </Text>
+              </PressableScale>
+            </View>
+            <View>
+              <View></View>
+            </View>
+          </SafeAreaView>
         );
       }}
     >
@@ -205,10 +216,12 @@ export default function DrawerLayout() {
           name={route.name}
           options={{
             title: route.label,
-            ...(route.name === "graphs" ? { swipeEnabled: false } : {}),
+            swipeEnabled: false,
           }}
         />
       ))}
     </Drawer>
   );
-}
+};
+
+export default DrawerLayout;

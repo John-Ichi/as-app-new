@@ -28,4 +28,5 @@ export const graphConfig: Record<ParameterId, GraphConfig> = {
     yAxisMin: 0,
     yAxisMax: 10,
   },
+  salinity: { color: "#8b5cf6", shortLabel: "Sal", yAxisMin: 0, yAxisMax: 30 },
 };

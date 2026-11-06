@@ -55,3 +55,5 @@ GoogleService-Info.plist
 # .opencode
 .opencode/
 
+# personal file
+PROMPT.md

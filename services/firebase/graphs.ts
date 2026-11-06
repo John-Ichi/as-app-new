@@ -4,6 +4,7 @@ import type { GraphDataPoint, ParameterGraphData } from "@/services/types";
 import { formatTimeAmPm } from "@/utils/format";
 import {
   get,
+  limitToFirst,
   limitToLast,
   onValue,
   orderByKey,
@@ -39,6 +40,20 @@ export async function fetchReadingsSince(
     query(ref(db, `readings/${deviceId}`), orderByKey(), startAt(since.toString())),
   );
   return snapshot.val() ?? {};
+}
+
+/**
+ * Timestamp (epoch ms) of the device's oldest reading, or null when the
+ * device has no readings at all. Reads a single row.
+ */
+export async function fetchOldestReadingTs(
+  deviceId: string,
+): Promise<number | null> {
+  const snapshot = await get(
+    query(ref(db, `readings/${deviceId}`), orderByKey(), limitToFirst(1)),
+  );
+  if (!snapshot.exists()) return null;
+  return Number(Object.keys(snapshot.val())[0]);
 }
 
 function averageGroups(

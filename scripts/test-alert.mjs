@@ -1,36 +1,8 @@
-import fs from "fs";
-import path from "path";
+// Posts a single test alert so the app's notification badge/screen and the
+// push relay can be checked without waiting for a real threshold breach.
+// Usage: node scripts/test-alert.mjs [--device sensor-1] [--type warning|critical]
 
-// ── Config ─────────────────────────────────────────────
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), ".env");
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, "utf-8").split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eqIdx = trimmed.indexOf("=");
-      if (eqIdx === -1) continue;
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim();
-      if (process.env[key] === undefined) process.env[key] = val;
-    }
-  }
-}
-
-// ── REST Helpers ──────────────────────────────────────
-
-let BASE = "";
-
-async function rtdbPost(path, data) {
-  const res = await fetch(`${BASE}${path}.json`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`POST ${path}: ${res.status} ${await res.text()}`);
-  return res.json();
-}
+import { requireRtdbUrl, rtdbPost } from "./lib/rtdb.mjs";
 
 // ── CLI Args ──────────────────────────────────────────
 
@@ -54,18 +26,10 @@ function parseArgs() {
   return opts;
 }
 
-// ── Main ──────────────────────────────────────────────
+// ── Main ────────────────────────────────────────────────
 
 async function main() {
-  loadEnv();
-
-  const url = process.env.FIREBASE_RTDB_URL;
-  if (!url) {
-    console.error("Error: FIREBASE_RTDB_URL not set in .env or environment.");
-    process.exit(1);
-  }
-
-  BASE = url.replace(/\/+$/, "");
+  const BASE = requireRtdbUrl();
   const { device, type } = parseArgs();
 
   console.log(`Firebase RTDB: ${BASE}`);

@@ -1,3 +1,4 @@
+/** previous notifications hook */
 import { useDevice } from "@/contexts/DeviceContext";
 import { subscribeNotifications } from "@/services/firebase/notifications";
 import { AppNotification } from "@/services/types";

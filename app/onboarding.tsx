@@ -1,7 +1,7 @@
 import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
 import { useDevice } from "@/contexts/DeviceContext";
-import { Stack, router } from "expo-router";
+import { Redirect, Stack, router } from "expo-router";
 import { styled } from "nativewind";
 import { Image, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -10,44 +10,35 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 const Onboarding = () => {
   const { selectedDevice, isHydrated } = useDevice();
-
   if (!isHydrated) return null;
+  if (selectedDevice) return <Redirect href="/(drawer)" />;
 
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="w-full max-w-xl mx-auto flex-1">
-        <View className="flex-1 items-center justify-center">
-          <Image
-            source={icons.logo}
-            style={{
-              height: 240,
-              width: "80%",
-              maxWidth: 240,
-              resizeMode: "contain",
-            }}
-          />
-          <Text className="text-xl text-primary text-center font-poppins-bold">
-            Welcome to AmmoSense!
+      <View className="flex-1 items-center justify-center">
+        <Image
+          source={icons.logo}
+          style={{
+            height: 240,
+            width: "80%",
+            maxWidth: 240,
+            resizeMode: "contain",
+          }}
+        />
+        <Text className="text-xl text-primary text-center font-poppins-bold">
+          Welcome to AmmoSense!
+        </Text>
+        <Text className="text-lg text-muted text-center font-poppins-semibold">
+          Predictive Water Quality Monitoring
+        </Text>
+      </View>
+      <View className="items-center pb-18">
+        <PressableScale onPress={() => router.push("/device-select")}>
+          <Text className="text-white text-center text-lg font-poppins-semibold bg-primary rounded-xl p-4 px-8">
+            Continue
           </Text>
-          <Text className="text-lg text-muted text-center font-poppins-semibold">
-            Predictive Water Quality Monitoring
-          </Text>
-        </View>
-        <View className="py-18 items-center">
-          <PressableScale
-            onPress={() =>
-              router.push(selectedDevice ? "/(drawer)" : "/device-select")
-            }
-            className="w-[40%] bg-primary rounded-xl"
-          >
-            <View className="p-4">
-              <Text className="text-white text-center text-lg font-poppins-semibold">
-                Continue
-              </Text>
-            </View>
-          </PressableScale>
-        </View>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );

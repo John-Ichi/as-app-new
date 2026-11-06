@@ -1,6 +1,6 @@
 import ParameterChart from "@/components/ParameterChart";
 import PressableScale from "@/components/PressableScale";
-import { ErrorState, LoadingState } from "@/components/StateDisplay";
+import { EmptyState, ErrorState, LoadingState } from "@/components/StateDisplay";
 import { graphConfig } from "@/constants/graphs";
 import type { ParameterId } from "@/constants/parameters";
 import { parameterIds, parameterMap } from "@/constants/parameters";
@@ -32,6 +32,7 @@ const Graphs = () => {
     dissolvedOxygen: "oneDay",
     pH: "oneDay",
     turbidity: "oneDay",
+    salinity: "oneDay",
   });
 
   const scrollToSection = useCallback((id: ParameterId) => {
@@ -41,10 +42,15 @@ const Graphs = () => {
     }
   }, []);
 
-  if (error) return <ErrorState message={error.message} />;
+  if (error) return <ErrorState error={error} />;
   if (isLoading) return <LoadingState />;
   if (isGraphDataEmpty(allData))
-    return <ErrorState title="No data available." />;
+    return (
+      <EmptyState
+        title="No data available."
+        message="No readings found for this device."
+      />
+    );
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">

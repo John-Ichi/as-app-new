@@ -11,7 +11,11 @@ import {
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useSelectedObservation } from "@/hooks/useSelectedObservation";
-import { REFRESH_INTERVAL_MS, useWeather } from "@/hooks/useWeather";
+import {
+  REFRESH_INTERVAL_MS,
+  REQUEST_TIMEOUT_MS,
+  useWeather,
+} from "@/hooks/useWeather";
 import { fetchWeather } from "@/services/openMeteo";
 import type {
   GeocodedLocation,
@@ -169,7 +173,10 @@ const Weather = () => {
     deselect: deselectObservation,
   } = useSelectedObservation();
   const [editMode, setEditMode] = useState(false);
-  const [obsWeather, setObsWeather] = useState<WeatherInfo | null>(null);
+  const [obsSnapshot, setObsSnapshot] = useState<{
+    id: number;
+    info: WeatherInfo;
+  } | null>(null);
   const [isObsFetching, setIsObsFetching] = useState(false);
   const [obsError, setObsError] = useState<Error | null>(null);
   const [locOpen, setLocOpen] = useState(false);
@@ -182,7 +189,6 @@ const Weather = () => {
     isLoading: isLocationLoading,
     isValidating: isLocationValidating,
     lastUpdated: locationLastUpdated,
-    /** isUnavailable: isLocationUnavailable, */
   } = useCurrentLocation();
   const {
     savedLocations,
@@ -244,7 +250,7 @@ const Weather = () => {
 
   useEffect(() => {
     if (!selectedObservation || savedObsWeather) {
-      setObsWeather(null);
+      setObsSnapshot(null);
       setObsError(null);
       setIsObsFetching(false);
       return;
@@ -255,7 +261,7 @@ const Weather = () => {
       obsFetchedAt !== null &&
       Date.now() - obsFetchedAt < REFRESH_INTERVAL_MS
     ) {
-      setObsWeather(null);
+      setObsSnapshot(null);
       setObsError(null);
       setIsObsFetching(false);
       return;
@@ -265,6 +271,11 @@ const Weather = () => {
     // On refresh the previous snapshot intentionally stays rendered — the
     // card never goes blank while a background update runs.
     setObsError(null);
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
     fetchWeather(
       [
         {
@@ -275,18 +286,31 @@ const Weather = () => {
       controller.signal,
     )
       .then(([info]) => {
+        if (controller.signal.aborted) return;
         if (info) selectObservation(selectedObservation, info);
-        setObsWeather(info ?? null);
+        setObsSnapshot(info ? { id: selectedObservation.id, info } : null);
         setIsObsFetching(false);
       })
       .catch((err) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          if (timedOut) {
+            setObsError(
+              new Error(
+                "Request timed out. Check your connection and try again.",
+              ),
+            );
+            setIsObsFetching(false);
+          }
+          return;
+        }
         setObsError(
           err instanceof Error ? err : new Error("Failed to fetch weather."),
         );
         setIsObsFetching(false);
-      });
+      })
+      .finally(() => clearTimeout(timeoutId));
     return () => {
+      clearTimeout(timeoutId);
       controller.abort();
     };
   }, [
@@ -429,7 +453,10 @@ const Weather = () => {
     return <LoadingState />;
   if (weather.error && !hasAnyWeather)
     return (
-      <ErrorState message={weather.error.message} onRetry={weather.refetch} />
+      <ErrorState
+        error={weather.error}
+        action={{ label: "Try again", onPress: weather.refetch }}
+      />
     );
 
   const handleAddLocation = (location: SavedLocation) => {
@@ -441,14 +468,10 @@ const Weather = () => {
 
   const handleSelectObservation = (location: SavedLocation) => {
     // Recognize the device location so weather.data hits instantly with no
-    // duplicate fetch. The device card is identified by either textual
-    // identity (name+admin1) or geometric proximity, since the reverse
-    // geocoder and the Open-Meteo geocoder rarely agree on both.
+    // duplicate fetch. The device card is identified by geometric proximity,
+    // since the reverse geocoder and the Open-Meteo geocoder rarely agree.
     const deviceLoc = savedLocations.find((loc) => loc.source === "device");
     if (deviceLoc && deviceLoc.id !== location.id) {
-      // const nameMatches =
-      // deviceLoc.name === location.name &&
-      // deviceLoc.admin1 === location.admin1;
       if (distanceKm(location, deviceLoc) < MATCH_RADIUS_KM) {
         selectObservation(
           deviceLoc,
@@ -478,7 +501,9 @@ const Weather = () => {
 
   const activeObsWeather =
     selectedObservation !== null
-      ? (savedObsWeather ?? storedWeather ?? obsWeather)
+      ? (savedObsWeather ??
+        storedWeather ??
+        (obsSnapshot?.id === selectedObservation.id ? obsSnapshot.info : null))
       : null;
 
   const forecastLocation =
@@ -519,12 +544,11 @@ const Weather = () => {
       ]
     : [];
 
-  const isUpdating = isLocationValidating || weather.isFetching;
+  const isBusy = isLocationValidating || weather.isFetching;
   const newestUpdated =
     locationLastUpdated !== null && weather.lastUpdated !== null
       ? Math.max(locationLastUpdated, weather.lastUpdated)
       : (locationLastUpdated ?? weather.lastUpdated);
-  const showStrip = isUpdating || newestUpdated !== null || hasAnyWeather;
 
   const BADGE_OVERHANG = 12;
   const hasRemovableLocations = savedLocations.some(
@@ -534,31 +558,25 @@ const Weather = () => {
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
-      {showStrip && (
-        <View className="bg-primary flex-row items-center justify-center gap-x-3 py-2 px-4">
-          {isLocationValidating ? (
-            <ActivityIndicator size="small" color={colors.white} />
-          ) : null}
-          {newestUpdated !== null ? (
-            <Text className="text-sm text-white font-poppins-regular">
-              Last updated: {dayjs(newestUpdated).format("h:mm A")}
-            </Text>
-          ) : null}
-          {isUpdating ? (
-            <Text className="text-xs text-white font-poppins-regular">
-              Updating…
-            </Text>
-          ) : null}
-          {weather.error !== null && hasAnyWeather && !isUpdating ? (
-            <Text className="text-xs text-danger font-poppins-regular">
-              Couldn&apos;t refresh
-            </Text>
-          ) : null}
-          {upToDate && !isUpdating ? (
-            <Text className="text-xs text-white font-poppins-regular">
-              Up to date
-            </Text>
-          ) : null}
+      <View className="bg-primary flex-row items-center justify-center py-2 px-4 gap-x-4">
+        <Text className="text-sm text-white font-poppins-regular">
+          {newestUpdated !== null
+            ? `Last updated: ${dayjs(newestUpdated).format("h:mm A")}`
+            : "Not updated yet"}
+        </Text>
+        {weather.error !== null && hasAnyWeather && !isBusy ? (
+          <Text className="text-xs text-danger font-poppins-regular">
+            Couldn&apos;t refresh
+          </Text>
+        ) : null}
+        {upToDate && !isBusy ? (
+          <Text className="text-xs text-white font-poppins-regular">
+            Up to date
+          </Text>
+        ) : null}
+        {isBusy ? (
+          <ActivityIndicator size="small" color={colors.white} />
+        ) : (
           <PressableScale
             onPress={handleRefresh}
             disabled={weather.isFetching}
@@ -570,8 +588,8 @@ const Weather = () => {
               <Ionicons name="refresh" size={16} color={colors.white} />
             </Animated.View>
           </PressableScale>
-        </View>
-      )}
+        )}
+      </View>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -580,7 +598,6 @@ const Weather = () => {
         <ScrollView
           ref={scrollRef}
           className="flex-1 bg-background rounded-t-xl"
-          /* contentContainerClassName="pb-4" */
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           scrollEnabled={
@@ -640,9 +657,6 @@ const Weather = () => {
               {savedLocations.length === 0 ? (
                 <Text className="text-md text-muted font-poppins-light">
                   Add a location...
-                  {/** isLocationUnavailable 
-                    ? "Location unavailable. Add a location below."
-                    : "Add a location." */}
                 </Text>
               ) : (
                 <ScrollView
@@ -747,7 +761,7 @@ const Weather = () => {
                                 size={16}
                                 color={colors.primary}
                               />
-                              <Text className="text-sm text-muted font-poppins-light">
+                              <Text className="text-xs text-muted font-poppins-light">
                                 24-HR RAIN:{" "}
                                 {info ? `${info.rain24h.toFixed(2)} mm` : "—"}
                               </Text>
@@ -758,7 +772,7 @@ const Weather = () => {
                                 size={14}
                                 color={colors.primary}
                               />
-                              <Text className="text-sm text-muted font-poppins-light">
+                              <Text className="text-xs text-muted font-poppins-light">
                                 MAX HEAT INDEX:{" "}
                                 {info
                                   ? `${Math.round(info.maxHeatIndex)} °C`
@@ -946,6 +960,9 @@ const Weather = () => {
                 </Text>
               )}
             </View>
+            <Text className="text-sm text-muted font-poppins-light text-center pt-4 pb-6">
+              Weather data by Open-Meteo.com (CC BY 4.0)
+            </Text>
           </View>
           {keyboardHeight > 0 && Platform.OS === "android" ? (
             <View style={{ height: keyboardHeight }} />

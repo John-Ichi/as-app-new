@@ -1,6 +1,6 @@
 import DataTable from "@/components/DataTable";
 import PressableScale from "@/components/PressableScale";
-import { ErrorState, LoadingState } from "@/components/StateDisplay";
+import { EmptyState, ErrorState, LoadingState } from "@/components/StateDisplay";
 import { graphConfig } from "@/constants/graphs";
 import { ParameterId, parameterIds } from "@/constants/parameters";
 import { colors } from "@/constants/theme";
@@ -82,11 +82,16 @@ const DataTableModal = ({ visible, onClose }: Props) => {
 
   let content;
   if (error && !buckets) {
-    content = <ErrorState message={error.message} />;
+    content = <ErrorState error={error} />;
   } else if (!buckets) {
     content = <LoadingState />;
   } else if (isBucketDataEmpty(buckets)) {
-    content = <ErrorState title="No data available." />;
+    content = (
+      <EmptyState
+        title="No data available."
+        message="No readings found for this device."
+      />
+    );
   } else {
     content = (
       <DataTable

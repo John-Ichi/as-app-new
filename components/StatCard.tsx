@@ -18,7 +18,7 @@ const StatCard = ({
   bgColor = "bg-white",
 }: StatCardProps) => (
   <View
-    className={`w-[31%] ${bgColor} rounded-t-bg shadow-md shadow-slate-400/30 items-center p-2`}
+    className={`w-[31%] ${bgColor} rounded-t-lg shadow-md shadow-slate-400/30 items-center p-2`}
   >
     <Text className={`text-md text-primary font-poppins-semibold`}>
       {label}

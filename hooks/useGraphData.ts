@@ -6,24 +6,32 @@ import { useEffect, useState } from "react";
 export function useGraphData(): {
   data: ParameterGraphData[];
   isLoading: boolean;
+  isRefreshing: boolean;
+  lastUpdated: number | null;
   error: Error | null;
 } {
   const { selectedDevice } = useDevice();
   const [data, setData] = useState<ParameterGraphData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!selectedDevice) {
       setData([]);
       setError(null);
+      setLastUpdated(null);
       setIsLoading(false);
+      setIsRefreshing(false);
       return;
     }
 
     let cancelled = false;
     setData([]);
     setIsLoading(true);
+    setIsRefreshing(false);
+    setLastUpdated(null);
     setError(null);
 
     let historicalCache: ParameterGraphData[] | null = null;
@@ -54,9 +62,10 @@ export function useGraphData(): {
 
     const unsubscribeOneDay = subscribeOneDay(
       selectedDevice.id,
-      (buckets) => {
+      (buckets, latestTs) => {
         if (cancelled) return;
         liveDayBuckets = buckets as Record<string, GraphDataPoint[]>;
+        setLastUpdated(latestTs);
         setError(null);
         tryEmit();
       },
@@ -68,6 +77,7 @@ export function useGraphData(): {
     const historicalInterval = setInterval(
       () => {
         if (cancelled) return;
+        setIsRefreshing(true);
         getGraphData(selectedDevice.id)
           .then((result) => {
             if (cancelled) return;
@@ -76,6 +86,9 @@ export function useGraphData(): {
           })
           .catch((err) => {
             if (!cancelled) setError(err);
+          })
+          .finally(() => {
+            if (!cancelled) setIsRefreshing(false);
           });
       },
       60 * 60 * 1000,
@@ -88,5 +101,5 @@ export function useGraphData(): {
     };
   }, [selectedDevice]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, isRefreshing, lastUpdated, error };
 }

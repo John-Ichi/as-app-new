@@ -8,17 +8,32 @@ import {
 import { graphConfig, type GraphRangeId } from "@/constants/graphs";
 import type { ParameterId } from "@/constants/parameters";
 import { parameterIds, parameterMap } from "@/constants/parameters";
+import { colors } from "@/constants/theme";
 import { useGraphData } from "@/hooks/useGraphData";
 import { isGraphDataEmpty } from "@/services/firebase/graphs";
+import dayjs from "dayjs";
 import { styled } from "nativewind";
 import { useCallback, useRef, useState } from "react";
-import { Image, ScrollView, useWindowDimensions, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Graphs = () => {
-  const { data: allData, isLoading, error } = useGraphData();
+  const {
+    data: allData,
+    isLoading,
+    isRefreshing,
+    lastUpdated,
+    error,
+  } = useGraphData();
 
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = screenWidth - 48;
@@ -46,19 +61,29 @@ const Graphs = () => {
     }
   }, []);
 
-  if (error) return <ErrorState error={error} />;
+  if (error && allData.length === 0) return <ErrorState error={error} />;
   if (isLoading) return <LoadingState />;
   if (isGraphDataEmpty(allData))
     return (
       <EmptyState
         title="No data available"
-        message="No readings found for this device"
+        message="No readings found within the last year for this device"
       />
     );
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-primary">
       <View className="flex-1 w-full max-w-xl mx-auto">
+        <View className="flex-row items-center justify-center gap-x-4 px-4 py-2">
+          {lastUpdated ? (
+            <Text className="text-sm text-white font-poppins-regular">
+              Last updated: {dayjs(lastUpdated).format("h:mm A")}
+            </Text>
+          ) : null}
+          {isRefreshing ? (
+            <ActivityIndicator size="small" color={colors.white} />
+          ) : null}
+        </View>
         <View className="bg-background rounded-t-xl flex-row gap-x-2 p-4">
           {parameterIds.map((id) => (
             <PressableScale
@@ -83,7 +108,12 @@ const Graphs = () => {
           contentContainerClassName="pb-10"
           bounces={false}
         >
-          <View className="w-full max-w-xl mx-auto pt-4 px-4">
+          <View className="pt-4 px-4">
+            {error && allData.length > 0 ? (
+              <Text className="text-sm text-danger font-poppins-regular text-center pb-2">
+                Failed to refresh: {error.message}
+              </Text>
+            ) : null}
             {allData.map((paramData) => {
               const id = paramData.id;
               const config = graphConfig[id];

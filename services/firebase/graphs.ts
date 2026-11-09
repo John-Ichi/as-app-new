@@ -1,8 +1,8 @@
 import { parameterIds, type ParameterId } from "@/constants/parameters";
 import { db } from "@/firebase/config";
 import type { GraphDataPoint, ParameterGraphData } from "@/services/types";
-import dayjs from "dayjs";
 import { formatTimeAmPm } from "@/utils/format";
+import dayjs from "dayjs";
 import {
   get,
   limitToFirst,
@@ -47,10 +47,6 @@ export async function fetchReadingsSince(
   return snapshot.val() ?? {};
 }
 
-/**
- * Timestamp (epoch ms) of the device's oldest reading, or null when the
- * device has no readings at all. Reads a single row.
- */
 export async function fetchOldestReadingTs(
   deviceId: string,
 ): Promise<number | null> {
@@ -165,11 +161,8 @@ function buildOneYearWallClock(
       new Date(now.getFullYear(), now.getMonth() - (11 - i), 1).getTime(),
     ),
   );
-  return buildWallClockBuckets(
-    readings,
-    slots,
-    firstOfMonthFor,
-    (slotStart) => dayjs(slotStart).format("MMM"),
+  return buildWallClockBuckets(readings, slots, firstOfMonthFor, (slotStart) =>
+    dayjs(slotStart).format("MMM"),
   );
 }
 
@@ -285,13 +278,20 @@ export function subscribeRawReadings(
 
 export function subscribeOneDay(
   deviceId: string,
-  onData: (buckets: Record<ParameterId, GraphDataPoint[]>) => void,
+  onData: (
+    buckets: Record<ParameterId, GraphDataPoint[]>,
+    latestTs: number | null,
+  ) => void,
   onError: (error: Error) => void,
 ): () => void {
   return subscribeWindowedReadings(
     deviceId,
     DAY_MS,
-    (readings) => onData(buildOneDayWallClock(readings)),
+    (readings) => {
+      const keys = Object.keys(readings).sort();
+      const latestTs = keys.length > 0 ? Number(keys[keys.length - 1]) : null;
+      onData(buildOneDayWallClock(readings), latestTs);
+    },
     onError,
   );
 }

@@ -50,7 +50,7 @@ const DownloadModal = ({ visible, onClose }: Props) => {
               pressedStyle={{ backgroundColor: colors.pressed }}
               hitSlop={10}
             >
-              <Text className="text-xl text-muted font-poppins-regular">
+              <Text className="text-xl text-muted font-poppins-light">
                 {"\u00D7"}
               </Text>
             </PressableScale>

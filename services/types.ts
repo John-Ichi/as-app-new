@@ -1,5 +1,9 @@
 import type { ParameterId } from "@/constants/parameters";
-import type { ParameterStatus, OverallStatus, RiskLevel } from "@/constants/status";
+import type {
+  OverallStatus,
+  ParameterStatus,
+  RiskLevel,
+} from "@/constants/status";
 
 export interface Device {
   id: string;
@@ -30,7 +34,8 @@ export interface GraphDataPoint {
 export interface ParameterGraphData {
   id: ParameterId;
   oneDay: GraphDataPoint[];
-  sevenDay: GraphDataPoint[];
+  oneMonth: GraphDataPoint[];
+  oneYear: GraphDataPoint[];
 }
 
 export interface AppNotification {
@@ -42,6 +47,7 @@ export interface AppNotification {
   parameter: string;
   value: number;
   ts: number;
+  deleted: boolean;
   pushed?: boolean;
 }
 

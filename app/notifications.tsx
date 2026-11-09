@@ -1,3 +1,4 @@
+/** previous notifications page */
 import AlertCard from "@/components/AlertCard";
 import PressableScale from "@/components/PressableScale";
 import { ErrorState, LoadingState } from "@/components/StateDisplay";
@@ -103,7 +104,7 @@ const Notifications = () => {
   );
 
   if (!selectedDevice) return <Redirect href="/onboarding" />;
-  if (error) return <ErrorState message={error.message} />;
+  if (error) return <ErrorState error={error} />;
   if (isLoading) return <LoadingState />;
   /**
   if (notifications.length === 0)

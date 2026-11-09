@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const WEATHER_CACHE_KEY = "weather-cache-v2";
 export const REFRESH_INTERVAL_MS = 60 * 60 * 1000;
-const REQUEST_TIMEOUT_MS = 10_000;
+export const REQUEST_TIMEOUT_MS = 10_000;
 
 interface WeatherCache {
   fetchedAt: number;
@@ -190,21 +190,27 @@ export function useWeather(
         if (age >= REFRESH_INTERVAL_MS) doFetch();
       }
 
-      const tick = setInterval(() => {
-        if (
-          lastUpdatedRef.current !== null &&
-          Date.now() - lastUpdatedRef.current < REFRESH_INTERVAL_MS
-        ) {
-          return;
-        }
-        doFetch();
-      }, REFRESH_INTERVAL_MS);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const schedule = (delayMs: number) => {
+        timer = setTimeout(() => {
+          void doFetch();
+          // A successful fetch updates lastUpdated, which re-runs this effect
+          // and reschedules from the new expiry. Failure falls back to the
+          // normal cadence.
+          schedule(REFRESH_INTERVAL_MS);
+        }, delayMs);
+      };
+      const remaining =
+        lastUpdated !== null
+          ? Math.max(0, lastUpdated + REFRESH_INTERVAL_MS - Date.now())
+          : REFRESH_INTERVAL_MS;
+      schedule(remaining);
 
       return () => {
-        clearInterval(tick);
+        if (timer !== undefined) clearTimeout(timer);
         abortRef.current?.abort();
       };
-    }, [enabled, signature, doFetch])
+    }, [enabled, signature, doFetch, lastUpdated])
   );
 
   const refetch = useCallback((): boolean => {

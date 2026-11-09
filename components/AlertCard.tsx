@@ -1,3 +1,4 @@
+/** previous notifications card */
 import PressableScale from "@/components/PressableScale";
 import { icons } from "@/constants/icons";
 import { memo, useEffect, useState } from "react";

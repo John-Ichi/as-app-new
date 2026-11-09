@@ -1,39 +1,47 @@
 import { useDevice } from "@/contexts/DeviceContext";
 import { getGraphData, subscribeOneDay } from "@/services/firebase/graphs";
-import type { ParameterGraphData } from "@/services/types";
+import type { GraphDataPoint, ParameterGraphData } from "@/services/types";
 import { useEffect, useState } from "react";
 
 export function useGraphData(): {
   data: ParameterGraphData[];
   isLoading: boolean;
+  isRefreshing: boolean;
+  lastUpdated: number | null;
   error: Error | null;
 } {
   const { selectedDevice } = useDevice();
   const [data, setData] = useState<ParameterGraphData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!selectedDevice) {
       setData([]);
       setError(null);
+      setLastUpdated(null);
       setIsLoading(false);
+      setIsRefreshing(false);
       return;
     }
 
     let cancelled = false;
     setData([]);
     setIsLoading(true);
+    setIsRefreshing(false);
+    setLastUpdated(null);
     setError(null);
 
-    let sevenDayCache: ParameterGraphData[] | null = null;
-    let oneDayBuckets: Record<string, import("@/services/types").GraphDataPoint[]> | null = null;
+    let historicalCache: ParameterGraphData[] | null = null;
+    let liveDayBuckets: Record<string, GraphDataPoint[]> | null = null;
 
     const tryEmit = () => {
-      if (cancelled || !sevenDayCache || !oneDayBuckets) return;
-      const merged = sevenDayCache.map((p) => ({
+      if (cancelled || !historicalCache || !liveDayBuckets) return;
+      const merged = historicalCache.map((p) => ({
         ...p,
-        oneDay: oneDayBuckets![p.id as string] ?? [],
+        oneDay: liveDayBuckets![p.id as string] ?? [],
       }));
       setData(merged as ParameterGraphData[]);
       setIsLoading(false);
@@ -42,7 +50,7 @@ export function useGraphData(): {
     getGraphData(selectedDevice.id)
       .then((initial) => {
         if (cancelled) return;
-        sevenDayCache = initial;
+        historicalCache = initial;
         tryEmit();
       })
       .catch((err) => {
@@ -54,9 +62,10 @@ export function useGraphData(): {
 
     const unsubscribeOneDay = subscribeOneDay(
       selectedDevice.id,
-      (buckets) => {
+      (buckets, latestTs) => {
         if (cancelled) return;
-        oneDayBuckets = buckets as Record<string, import("@/services/types").GraphDataPoint[]>;
+        liveDayBuckets = buckets as Record<string, GraphDataPoint[]>;
+        setLastUpdated(latestTs);
         setError(null);
         tryEmit();
       },
@@ -65,26 +74,32 @@ export function useGraphData(): {
       },
     );
 
-    // keep sevenDay fresh via low-frequency poll (hourly) - 24h is already live
-    const sevenDayInterval = setInterval(() => {
-      if (cancelled) return;
-      getGraphData(selectedDevice.id)
-        .then((result) => {
-          if (cancelled) return;
-          sevenDayCache = result;
-          tryEmit();
-        })
-        .catch((err) => {
-          if (!cancelled) setError(err);
-        });
-    }, 60 * 60 * 1000);
+    const historicalInterval = setInterval(
+      () => {
+        if (cancelled) return;
+        setIsRefreshing(true);
+        getGraphData(selectedDevice.id)
+          .then((result) => {
+            if (cancelled) return;
+            historicalCache = result;
+            tryEmit();
+          })
+          .catch((err) => {
+            if (!cancelled) setError(err);
+          })
+          .finally(() => {
+            if (!cancelled) setIsRefreshing(false);
+          });
+      },
+      60 * 60 * 1000,
+    );
 
     return () => {
       cancelled = true;
       unsubscribeOneDay();
-      clearInterval(sevenDayInterval);
+      clearInterval(historicalInterval);
     };
   }, [selectedDevice]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, isRefreshing, lastUpdated, error };
 }

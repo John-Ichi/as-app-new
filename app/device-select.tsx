@@ -1,9 +1,13 @@
 import PressableScale from "@/components/PressableScale";
-import { ErrorState, LoadingState } from "@/components/StateDisplay";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "@/components/StateDisplay";
 import { colors } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useDevices } from "@/hooks/useDevices";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { router, Stack } from "expo-router";
 import { styled } from "nativewind";
 import { FlatList, Text, View } from "react-native";
@@ -21,16 +25,24 @@ const DeviceSelect = () => {
   };
 
   if (isLoading) return <LoadingState />;
-  if (error) return <ErrorState message={error.message} />;
-  if (devices.length === 0)
+  if (error)
     return (
       <ErrorState
-        title="No devices available."
-        message="Please check your connection or add a device."
-        actionLabel="Return"
-        onAction={() => {
-          selectDevice(null);
-          router.replace("/onboarding");
+        error={error}
+        action={{ label: "Back", onPress: () => router.replace("/onboarding") }}
+      />
+    );
+  if (devices.length === 0)
+    return (
+      <EmptyState
+        title="No devices available"
+        message="Please add a device"
+        action={{
+          label: "Back",
+          onPress: () => {
+            selectDevice(null);
+            router.replace("/onboarding");
+          },
         }}
       />
     );
@@ -38,18 +50,18 @@ const DeviceSelect = () => {
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="w-full max-w-xl mx-auto flex-1 px-4">
-        <View className="flex-row py-2">
+      <View className="w-full max-w-xl mx-auto flex-1 p-4">
+        <View>
           <PressableScale
             onPress={() => router.replace("/onboarding")}
-            hitSlop={8}
+            hitSlop={20}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="arrow-back" size={24} color={colors.primary} />
+            <AntDesign name="left" size={24} color={colors.primary} />
           </PressableScale>
         </View>
-        <Text className="text-xl text-center text-primary font-poppins-bold py-8">
+        <Text className="text-xl text-center text-primary font-poppins-bold pb-8 pt-4">
           Select Device
         </Text>
         <FlatList
@@ -61,16 +73,14 @@ const DeviceSelect = () => {
             return (
               <PressableScale onPress={() => handleSelect(item)}>
                 <View
-                  className={`flex-row bg-white rounded-bg shadow-md shadow-slate-400/30 items-center p-4 ${
+                  className={`flex-row bg-white rounded-lg shadow-md shadow-slate-400/30 items-center p-4 gap-x-4 ${
                     isCurrent ? "border-2 border-primary" : ""
                   }`}
                 >
-                  <View className="w-10 h-10 bg-success rounded-full items-center justify-center">
-                    <Text className="text-lg text-white font-poppins-bold">
-                      {"\u2713"}
-                    </Text>
-                  </View>
-                  <View className="flex-1 ml-4">
+                  <Text className="text-lg text-white font-poppins-bold bg-success rounded-full px-4 py-2">
+                    {"\u2713"}
+                  </Text>
+                  <View className="flex-1">
                     <Text className="text-lg text-primary font-poppins-bold">
                       {item.name}
                     </Text>
@@ -78,7 +88,7 @@ const DeviceSelect = () => {
                       {item.location}
                     </Text>
                     {isCurrent && (
-                      <Text className="text-sm text-primary font-poppins-semibold mt-1">
+                      <Text className="text-sm text-primary font-poppins-semibold mt-2">
                         PREVIOUSLY CONNECTED
                       </Text>
                     )}

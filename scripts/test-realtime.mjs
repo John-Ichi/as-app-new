@@ -1,46 +1,22 @@
-import fs from "fs";
-import path from "path";
+// Writes a single live reading per device at the next 5-minute boundary to
+// verify the app's realtime subscriptions end-to-end.
+// Usage: node scripts/test-realtime.mjs [--device sensor-1] [--ammonia 0.25]
 
-// ── Config ─────────────────────────────────────────────
+import { requireRtdbUrl, rtdbPatch, rtdbPut } from "./lib/rtdb.mjs";
+import { DEVICES, round } from "./lib/simulate.mjs";
 
-function loadEnv() {
-  const envPath = path.join(process.cwd(), ".env");
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, "utf-8").split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eqIdx = trimmed.indexOf("=");
-      if (eqIdx === -1) continue;
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim();
-      if (process.env[key] === undefined) process.env[key] = val;
-    }
-  }
-}
+const ALL_DEVICES = DEVICES.map((d) => d.id);
 
-// ── REST Helpers ──────────────────────────────────────
-
-let BASE = "";
-
-async function rtdbPut(rtdbPath, data) {
-  const res = await fetch(`${BASE}${rtdbPath}.json`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`PUT ${rtdbPath}: ${res.status} ${await res.text()}`);
-  return res.json();
-}
-
-async function rtdbPatch(rtdbPath, data) {
-  const res = await fetch(`${BASE}${rtdbPath}.json`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`PATCH ${rtdbPath}: ${res.status} ${await res.text()}`);
-  return res.json();
-}
+// Loose plausible ranges for a single spot reading (not the sinusoidal model
+// used by the seed scripts).
+const PARAM_RANGES = {
+  ammonia:         { min: 0.01, max: 0.15, decimals: 3 },
+  temperature:     { min: 25,   max: 32,   decimals: 1 },
+  dissolvedOxygen: { min: 5.5,  max: 8.5,  decimals: 1 },
+  pH:              { min: 6.5,  max: 8.5,  decimals: 1 },
+  turbidity:       { min: 1,    max: 8,    decimals: 1 },
+  salinity:        { min: 12,   max: 18,   decimals: 1 },
+};
 
 // ── CLI Args ──────────────────────────────────────────
 
@@ -83,24 +59,7 @@ function parseArgs() {
   return opts;
 }
 
-// ── Constants ─────────────────────────────────────────
-
-const ALL_DEVICES = ["sensor-1", "sensor-2", "sensor-3"];
-
-const PARAM_RANGES = {
-  ammonia:         { min: 0.01, max: 0.15, decimals: 3 },
-  temperature:     { min: 25,   max: 32,   decimals: 1 },
-  dissolvedOxygen: { min: 5.5,  max: 8.5,  decimals: 1 },
-  pH:              { min: 6.5,  max: 8.5,  decimals: 1 },
-  turbidity:       { min: 1,    max: 8,    decimals: 1 },
-};
-
-// ── Helpers ───────────────────────────────────────────
-
-function round(val, decimals) {
-  const factor = 10 ** decimals;
-  return Math.round(val * factor) / factor;
-}
+// ── Helpers ────────────────────────────────────────────
 
 function randomInRange(min, max) {
   return min + Math.random() * (max - min);
@@ -125,18 +84,10 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ── Main ──────────────────────────────────────────────
+// ── Main ────────────────────────────────────────────────
 
 async function main() {
-  loadEnv();
-
-  const url = process.env.FIREBASE_RTDB_URL;
-  if (!url) {
-    console.error("Error: FIREBASE_RTDB_URL not set in .env or environment.");
-    process.exit(1);
-  }
-
-  BASE = url.replace(/\/+$/, "");
+  const BASE = requireRtdbUrl();
   const { device, ammonia } = parseArgs();
   const devices = device ? [device] : ALL_DEVICES;
 

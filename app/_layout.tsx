@@ -1,14 +1,16 @@
+import PressableScale from "@/components/PressableScale";
+import { PushNotificationRegistrar } from "@/components/PushNotificationRegistrar";
 import { colors } from "@/constants/theme";
 import { DeviceProvider } from "@/contexts/DeviceContext";
 import "@/global.css";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { useFonts } from "expo-font";
-import { SplashScreen, Stack } from "expo-router";
+import { router, SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
-import { Text } from "react-native";
+import { Platform, Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { PushNotificationRegistrar } from "@/components/PushNotificationRegistrar";
 
-void SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded, fontsError] = useFonts({
@@ -34,17 +36,24 @@ export default function RootLayout() {
         <PushNotificationRegistrar />
         <Stack
           initialRouteName="onboarding"
-          screenOptions={{ headerShown: false }}
+          screenOptions={{
+            headerShown: false,
+            headerTitleAlign: "center",
+            headerBackButtonDisplayMode: "minimal",
+          }}
         >
           <Stack.Screen name="device-select" />
           <Stack.Screen
             name="parameters"
             options={{
               headerShown: true,
-              title: "Water Quality Parameters",
+              title: "Parameters",
               headerStyle: { backgroundColor: colors.primary },
               headerTitle: (props) => (
-                <Text className="text-lg text-white font-poppins-bold">
+                <Text
+                  className="text-white text-center font-poppins-bold"
+                  style={{ fontSize: 20, fontWeight: 600 }}
+                >
                   {props.children}
                 </Text>
               ),
@@ -52,6 +61,8 @@ export default function RootLayout() {
               headerTintColor: colors.white,
             }}
           />
+
+          {/** previous notification drawer item */}
           <Stack.Screen
             name="notifications"
             options={{
@@ -62,6 +73,39 @@ export default function RootLayout() {
                 <Text className="text-lg text-white font-poppins-bold">
                   {props.children}
                 </Text>
+              ),
+              headerShadowVisible: false,
+              headerTintColor: colors.white,
+            }}
+          />
+
+          <Stack.Screen
+            name="notifs"
+            options={{
+              headerShown: true,
+              title: "Notifications",
+              headerStyle: { backgroundColor: colors.primary },
+              headerTitle: (props) => (
+                <Text
+                  className="text-white text-center font-poppins-bold"
+                  style={{ fontSize: 20, fontWeight: 600 }}
+                >
+                  {props.children}
+                </Text>
+              ),
+              headerLeft: () => (
+                <PressableScale
+                  onPress={() =>
+                    router.canGoBack()
+                      ? router.back()
+                      : router.replace("/(drawer)")
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
+                  style={{ paddingLeft: Platform.OS === "web" ? 16 : 0 }}
+                >
+                  <AntDesign name="left" size={24} color={colors.white} />
+                </PressableScale>
               ),
               headerShadowVisible: false,
               headerTintColor: colors.white,

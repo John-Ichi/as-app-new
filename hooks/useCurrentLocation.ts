@@ -10,6 +10,7 @@ const DEVICE_LOCATION_ID = -1;
 const FALLBACK_NAME = "Current Location";
 const DEVICE_CACHE_KEY = "device-location-cache";
 export const MATCH_RADIUS_KM = 1;
+const POSITION_TIMEOUT_MS = 10_000;
 
 interface Coords {
   latitude: number;
@@ -141,8 +142,7 @@ export function useCurrentLocation(): CurrentLocationState {
         setIsValidating(true);
       }
 
-      let ok = false;
-      try {
+      const apply = async (): Promise<boolean> => {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") throw new Error("Permission denied.");
 
@@ -151,7 +151,7 @@ export function useCurrentLocation(): CurrentLocationState {
             maxAge: 300_000,
             requiredAccuracy: 5_000,
           })) ?? (await Location.getCurrentPositionAsync({}));
-        if (disposed) return;
+        if (disposed) return false;
 
         const fresh = {
           latitude: position.coords.latitude,
@@ -159,23 +159,39 @@ export function useCurrentLocation(): CurrentLocationState {
         };
 
         if (cached && distanceKm(fresh, cached) <= MATCH_RADIUS_KM) {
-          ok = true;
-          return;
+          return true;
         }
 
         const resolved = await resolvePlaceName(fresh, controller.signal);
-        if (disposed) return;
+        if (disposed) return false;
         setLocation(resolved);
         writeDeviceCache(resolved);
-        ok = true;
-      } catch {
-        if (!disposed && !cached) setIsUnavailable(true);
-      } finally {
-        if (!disposed) {
-          setIsLoading(false);
-          setIsValidating(false);
-          if (ok) setLastUpdated(Date.now());
-        }
+        return true;
+      };
+
+      // The fix resolves in the background: the UI is unblocked after
+      // POSITION_TIMEOUT_MS even if no position arrives, and the location is
+      // applied whenever it eventually does.
+      const resolution = apply()
+        .then((applied) => {
+          if (applied && !disposed) setLastUpdated(Date.now());
+        })
+        .catch(() => {
+          if (!disposed && !cached) setIsUnavailable(true);
+        });
+
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        resolution,
+        new Promise<void>((resolveTimeout) => {
+          timeoutId = setTimeout(resolveTimeout, POSITION_TIMEOUT_MS);
+        }),
+      ]);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      if (!disposed) {
+        setIsLoading(false);
+        setIsValidating(false);
       }
     }
 

@@ -1,4 +1,5 @@
 import PressableScale from "@/components/PressableScale";
+import { type GraphRangeId } from "@/constants/graphs";
 import type { ParameterId } from "@/constants/parameters";
 import { colors, fonts } from "@/constants/theme";
 import { useState } from "react";
@@ -12,9 +13,10 @@ interface ParameterChartProps {
   color: string;
   yAxisMin: number;
   yAxisMax: number;
+  threshold?: number;
   chartWidth: number;
-  range: "oneDay" | "sevenDay";
-  onRangeChange: (id: ParameterId, range: "oneDay" | "sevenDay") => void;
+  range: GraphRangeId;
+  onRangeChange: (id: ParameterId, range: GraphRangeId) => void;
   onLayout?: (y: number) => void;
 }
 
@@ -25,6 +27,7 @@ const ParameterChart = ({
   color,
   yAxisMin,
   yAxisMax,
+  threshold,
   chartWidth,
   range,
   onRangeChange,
@@ -44,13 +47,28 @@ const ParameterChart = ({
       yAxisOffset={yAxisMin}
       noOfSections={5}
       spacing={60}
-      hideDataPoints={range === "oneDay"}
+      hideDataPoints={range !== "oneYear"}
       dataPointsRadius={4}
       dataPointsColor={color}
+      {...(threshold != null
+        ? {
+            showReferenceLine1: true,
+            referenceLine1Position: threshold,
+            referenceLine1Config: {
+              color: colors.danger,
+              thickness: 1,
+              type: "dashed",
+              dashWidth: 6,
+              dashGap: 4,
+            },
+          }
+        : {})}
       height={220}
       width={needsScroll ? contentWidth : containerWidth || chartWidth}
-      rulesColor="rgba(0,0,0,0.06)"
-      showVerticalLines={false}
+      rulesColor="transparent"
+      showVerticalLines={true}
+      verticalLinesColor="rgba(0,0,0,0.06)"
+      verticalLinesThickness={1}
       xAxisLabelTextStyle={{
         color: colors.muted,
         fontFamily: fonts.regular,
@@ -77,20 +95,28 @@ const ParameterChart = ({
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-lg text-primary font-poppins-bold">{label}</Text>
         <View className="flex-row gap-x-2">
-          <PressableScale onPress={() => onRangeChange(id, "oneDay")}>
-            <Text
-              className={`text-md font-poppins-bold rounded-sm px-2.5 py-0.5 ${range === "oneDay" ? "bg-primary text-white" : "bg-white text-primary"}`}
+          {(
+            [
+              { id: "oneDay", label: "1D" },
+              { id: "oneMonth", label: "M" },
+              { id: "oneYear", label: "Y" },
+            ] as { id: GraphRangeId; label: string }[]
+          ).map((chip) => (
+            <PressableScale
+              key={chip.id}
+              onPress={() => onRangeChange(id, chip.id)}
             >
-              1D
-            </Text>
-          </PressableScale>
-          <PressableScale onPress={() => onRangeChange(id, "sevenDay")}>
-            <Text
-              className={`text-md font-poppins-bold rounded-sm px-2.5 py-0.5 ${range === "sevenDay" ? "bg-primary text-white" : "bg-white text-primary"}`}
-            >
-              7D
-            </Text>
-          </PressableScale>
+              <Text
+                className={`text-md font-poppins-bold rounded-sm px-2.5 py-0.5 ${
+                  range === chip.id
+                    ? "bg-primary text-white"
+                    : "bg-white text-primary"
+                }`}
+              >
+                {chip.label}
+              </Text>
+            </PressableScale>
+          ))}
         </View>
       </View>
       <ScrollView

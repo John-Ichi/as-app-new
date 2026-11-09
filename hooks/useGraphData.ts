@@ -1,6 +1,6 @@
 import { useDevice } from "@/contexts/DeviceContext";
 import { getGraphData, subscribeOneDay } from "@/services/firebase/graphs";
-import type { ParameterGraphData } from "@/services/types";
+import type { GraphDataPoint, ParameterGraphData } from "@/services/types";
 import { useEffect, useState } from "react";
 
 export function useGraphData(): {
@@ -26,14 +26,14 @@ export function useGraphData(): {
     setIsLoading(true);
     setError(null);
 
-    let sevenDayCache: ParameterGraphData[] | null = null;
-    let oneDayBuckets: Record<string, import("@/services/types").GraphDataPoint[]> | null = null;
+    let historicalCache: ParameterGraphData[] | null = null;
+    let liveDayBuckets: Record<string, GraphDataPoint[]> | null = null;
 
     const tryEmit = () => {
-      if (cancelled || !sevenDayCache || !oneDayBuckets) return;
-      const merged = sevenDayCache.map((p) => ({
+      if (cancelled || !historicalCache || !liveDayBuckets) return;
+      const merged = historicalCache.map((p) => ({
         ...p,
-        oneDay: oneDayBuckets![p.id as string] ?? [],
+        oneDay: liveDayBuckets![p.id as string] ?? [],
       }));
       setData(merged as ParameterGraphData[]);
       setIsLoading(false);
@@ -42,7 +42,7 @@ export function useGraphData(): {
     getGraphData(selectedDevice.id)
       .then((initial) => {
         if (cancelled) return;
-        sevenDayCache = initial;
+        historicalCache = initial;
         tryEmit();
       })
       .catch((err) => {
@@ -56,7 +56,7 @@ export function useGraphData(): {
       selectedDevice.id,
       (buckets) => {
         if (cancelled) return;
-        oneDayBuckets = buckets as Record<string, import("@/services/types").GraphDataPoint[]>;
+        liveDayBuckets = buckets as Record<string, GraphDataPoint[]>;
         setError(null);
         tryEmit();
       },
@@ -65,24 +65,26 @@ export function useGraphData(): {
       },
     );
 
-    // keep sevenDay fresh via low-frequency poll (hourly) - 24h is already live
-    const sevenDayInterval = setInterval(() => {
-      if (cancelled) return;
-      getGraphData(selectedDevice.id)
-        .then((result) => {
-          if (cancelled) return;
-          sevenDayCache = result;
-          tryEmit();
-        })
-        .catch((err) => {
-          if (!cancelled) setError(err);
-        });
-    }, 60 * 60 * 1000);
+    const historicalInterval = setInterval(
+      () => {
+        if (cancelled) return;
+        getGraphData(selectedDevice.id)
+          .then((result) => {
+            if (cancelled) return;
+            historicalCache = result;
+            tryEmit();
+          })
+          .catch((err) => {
+            if (!cancelled) setError(err);
+          });
+      },
+      60 * 60 * 1000,
+    );
 
     return () => {
       cancelled = true;
       unsubscribeOneDay();
-      clearInterval(sevenDayInterval);
+      clearInterval(historicalInterval);
     };
   }, [selectedDevice]);
 

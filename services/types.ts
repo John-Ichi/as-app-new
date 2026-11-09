@@ -34,7 +34,8 @@ export interface GraphDataPoint {
 export interface ParameterGraphData {
   id: ParameterId;
   oneDay: GraphDataPoint[];
-  sevenDay: GraphDataPoint[];
+  oneMonth: GraphDataPoint[];
+  oneYear: GraphDataPoint[];
 }
 
 export interface AppNotification {

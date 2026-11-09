@@ -5,10 +5,17 @@ export interface GraphConfig {
   shortLabel: string;
   yAxisMin: number;
   yAxisMax: number;
+  threshold?: number;
 }
 
 export const graphConfig: Record<ParameterId, GraphConfig> = {
-  ammonia: { color: "#15a84b", shortLabel: "NH₃", yAxisMin: 0, yAxisMax: 0.25 },
+  ammonia: {
+    color: "#15a84b",
+    shortLabel: "NH₃",
+    yAxisMin: 0,
+    yAxisMax: 0.25,
+    threshold: 0.06,
+  },
   temperature: {
     color: "#dc2626",
     shortLabel: "Temp",
@@ -30,3 +37,5 @@ export const graphConfig: Record<ParameterId, GraphConfig> = {
   },
   salinity: { color: "#8b5cf6", shortLabel: "Sal", yAxisMin: 0, yAxisMax: 30 },
 };
+
+export type GraphRangeId = "oneDay" | "oneMonth" | "oneYear";

@@ -60,3 +60,7 @@ PROMPT.md
 
 # archive
 archive/
+
+# Python
+__pycache__/
+*.pyc

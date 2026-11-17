@@ -7,17 +7,25 @@ import {
   LoadingState,
 } from "@/components/StateDisplay";
 import { icons } from "@/constants/icons";
-import { overallStatusBg, riskTextColor } from "@/constants/status";
+import { overallStatusBg } from "@/constants/status";
+import { useDevice } from "@/contexts/DeviceContext";
 import { useWaterQualityData } from "@/hooks/useWaterQualityData";
+import {
+  getCachedForecast,
+  requestForecast,
+  subscribeForecast,
+} from "@/services/lstm";
+import type { AmmoniaForecast } from "@/services/types";
 import dayjs from "dayjs";
 import { styled } from "nativewind";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Dashboard = () => {
+  const { selectedDevice } = useDevice();
   const {
     overallStatus,
     parameters: readings,
@@ -28,6 +36,28 @@ const Dashboard = () => {
   } = useWaterQualityData();
 
   const [showForecast, setShowForecast] = useState(false);
+  const [forecast, setForecast] = useState<AmmoniaForecast | null>(
+    getCachedForecast(),
+  );
+
+  useEffect(() => {
+    if (!selectedDevice?.id) return;
+    setForecast(getCachedForecast());
+    const unsub = subscribeForecast(setForecast);
+    const STALE_MS = 30 * 60 * 1000;
+    const cached = getCachedForecast();
+    if (!cached || Date.now() - cached.fetchedAt > STALE_MS) {
+      requestForecast(selectedDevice.id);
+    }
+    return unsub;
+  }, [selectedDevice]);
+
+  useEffect(() => {
+    if (!selectedDevice?.id || !timestamp) return;
+    const cached = getCachedForecast();
+    if (cached && timestamp <= cached.lastReadingTs) return;
+    requestForecast(selectedDevice.id);
+  }, [timestamp, selectedDevice]);
 
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
@@ -73,7 +103,7 @@ const Dashboard = () => {
               accessibilityLabel="Open forecast modal"
               style={{ width: "100%" }}
             >
-              <View className="flex-row bg-white rounded-sm shadow-md shadow-slate-400/30 items-center gap-x-4 px-4 py-6">
+              <View className="flex-row bg-white rounded-sm shadow-md shadow-slate-400/30 items-center gap-x-4 p-4">
                 <Image
                   source={icons.warning}
                   style={{ width: 40, height: 40 }}
@@ -85,11 +115,20 @@ const Dashboard = () => {
                   <Text className="text-md text-primary font-poppins-regular">
                     Next hour:{" "}
                     <Text
-                      className={`${riskTextColor[predictiveAlert.risk]} font-poppins-extrabold`}
+                      className={`${
+                        predictiveAlert.alert ? "text-danger" : "text-success"
+                      } font-poppins-extrabold`}
                     >
-                      - ppm
-                    </Text>{" "}
-                    (coming soon)
+                      {forecast
+                        ? `${forecast.forecastMgL[0].toFixed(4)} ppm`
+                        : "—"}
+                    </Text>
+                  </Text>
+                  <Text
+                    className="text-sm text-muted font-poppins-light mt-1"
+                    numberOfLines={2}
+                  >
+                    {predictiveAlert.message}
                   </Text>
                 </View>
               </View>

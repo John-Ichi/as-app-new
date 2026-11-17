@@ -1,5 +1,9 @@
 import { classify } from "@/constants/status";
 import { db } from "@/firebase/config";
+import {
+  describeForecast,
+  getCachedForecast,
+} from "@/services/lstm";
 import type { ParameterReading, WaterQualityData } from "@/services/types";
 import { onValue, ref } from "firebase/database";
 
@@ -18,7 +22,7 @@ export function getWaterQualityData(
         onData({
           overallStatus: "NORMAL",
           parameters: [],
-          predictiveAlert: { risk: "LOW" },
+          predictiveAlert: { message: "No forecast yet", alert: false },
           timestamp: null,
           isLoading: false,
           error: null,
@@ -63,10 +67,13 @@ export function getWaterQualityData(
       const timestamp =
         rawTs != null ? (rawTs < 1e12 ? rawTs * 1000 : rawTs) : null;
 
+      const cached = getCachedForecast();
       onData({
         overallStatus,
         parameters: readings,
-        predictiveAlert: { risk: "LOW" },
+        predictiveAlert: cached
+          ? describeForecast(cached)
+          : { message: "No forecast yet", alert: false },
         timestamp,
         isLoading: false,
         error: null,

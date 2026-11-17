@@ -34,7 +34,7 @@ const Onboarding = () => {
         </Text>
       </View>
       <View className="items-center pb-18">
-        <PressableScale onPress={() => router.push("/device-select")}>
+        <PressableScale onPress={() => router.replace("/device-select")}>
           <Text className="text-white text-center text-lg font-poppins-semibold bg-primary rounded-xl p-4 px-8">
             Continue
           </Text>

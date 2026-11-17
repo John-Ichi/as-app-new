@@ -108,6 +108,10 @@ export function generateAlerts(readings, now) {
     for (const [param, value] of Object.entries(values)) {
       const t = THRESHOLDS[param];
       if (!t) continue;
+      // Seeds demo alerts for ammonia only: the alert product surface (pushes,
+      // forecast tie-in) is ammonia-scoped. Extend when the adviser confirms
+      // alert semantics for the other parameters.
+      if (param !== "ammonia") continue;
 
       const status = alertStatus(param, value);
       const prev = prevStatus[param] ?? "normal";

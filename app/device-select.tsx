@@ -8,7 +8,7 @@ import { colors } from "@/constants/theme";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useDevices } from "@/hooks/useDevices";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { router, Stack } from "expo-router";
+import { Redirect, router, Stack } from "expo-router";
 import { styled } from "nativewind";
 import { FlatList, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -17,13 +17,20 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 const DeviceSelect = () => {
   const { devices, isLoading, error } = useDevices();
-  const { lastDevice, selectDevice } = useDevice();
+  const {
+    selectedDevice,
+    lastDevice,
+    isHydrated,
+    selectDevice,
+  } = useDevice();
 
   const handleSelect = (device: (typeof devices)[number]) => {
     selectDevice(device);
-    router.push("/(drawer)");
+    router.replace("/(drawer)");
   };
 
+  if (!isHydrated) return null;
+  if (selectedDevice) return <Redirect href="/(drawer)" />;
   if (isLoading) return <LoadingState />;
   if (error)
     return (

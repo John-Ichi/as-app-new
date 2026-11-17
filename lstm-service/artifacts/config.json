@@ -1,0 +1,30 @@
+{
+  "input_cols": [
+    "temp_c",
+    "salinity_ppt",
+    "ph",
+    "do_mg_l",
+    "turbidity_ntu",
+    "nh3_mg_l",
+    "was_imputed_temp_c",
+    "was_imputed_salinity_ppt",
+    "was_imputed_ph",
+    "was_imputed_do_mg_l",
+    "was_imputed_turbidity_ntu",
+    "was_imputed_nh3_mg_l",
+    "hour_sin",
+    "hour_cos"
+  ],
+  "sensor_cols": [
+    "temp_c",
+    "salinity_ppt",
+    "ph",
+    "do_mg_l",
+    "turbidity_ntu",
+    "nh3_mg_l"
+  ],
+  "nh3_idx": 5,
+  "input_width": 24,
+  "out_steps": 24,
+  "units": 32
+}

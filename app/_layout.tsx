@@ -61,24 +61,6 @@ export default function RootLayout() {
               headerTintColor: colors.white,
             }}
           />
-
-          {/** previous notification drawer item */}
-          <Stack.Screen
-            name="notifications"
-            options={{
-              headerShown: true,
-              title: "Alert Notifications",
-              headerStyle: { backgroundColor: colors.primary },
-              headerTitle: (props) => (
-                <Text className="text-lg text-white font-poppins-bold">
-                  {props.children}
-                </Text>
-              ),
-              headerShadowVisible: false,
-              headerTintColor: colors.white,
-            }}
-          />
-
           <Stack.Screen
             name="notifs"
             options={{

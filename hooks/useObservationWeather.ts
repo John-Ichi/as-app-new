@@ -5,7 +5,7 @@ import {
 import { fetchWeather } from "@/services/openMeteo";
 import type { SavedLocation, WeatherInfo } from "@/services/types";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Options {
   selectedObservation: SavedLocation | null;
@@ -36,6 +36,7 @@ export function useObservationWeather({
   snapshot: { id: number; info: WeatherInfo } | null;
   isFetching: boolean;
   error: Error | null;
+  retry: () => void;
 } {
   const [snapshot, setSnapshot] = useState<{
     id: number;
@@ -43,6 +44,8 @@ export function useObservationWeather({
   } | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
+  const lastRetryRef = useRef(0);
 
   // Internal clock for staleness re-checks, driven by focus and the refresh
   // cadence. Never read outside this hook.
@@ -75,6 +78,10 @@ export function useObservationWeather({
   );
 
   useEffect(() => {
+    // A retry() call forces the fetch past the staleness short-circuit below
+    // (the savedObsWeather guard stays — saved locations refresh via useWeather).
+    const isRetry = retryTick !== lastRetryRef.current;
+    lastRetryRef.current = retryTick;
     if (!selectedObservation || savedObsWeather) {
       setSnapshot(null);
       setError(null);
@@ -83,6 +90,7 @@ export function useObservationWeather({
     }
     // Fresh stored snapshot → no fetch needed (mirrors useWeather's staleness rule)
     if (
+      !isRetry &&
       storedWeather !== null &&
       obsFetchedAt !== null &&
       Date.now() - obsFetchedAt < REFRESH_INTERVAL_MS
@@ -145,8 +153,11 @@ export function useObservationWeather({
     storedWeather,
     obsFetchedAt,
     now,
+    retryTick,
     selectObservation,
   ]);
 
-  return { snapshot, isFetching, error };
+  const retry = useCallback(() => setRetryTick(Date.now()), []);
+
+  return { snapshot, isFetching, error, retry };
 }

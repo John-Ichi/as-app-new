@@ -51,6 +51,7 @@ export function useGraphData(): {
       .then((initial) => {
         if (cancelled) return;
         historicalCache = initial;
+        setError(null);
         tryEmit();
       })
       .catch((err) => {
@@ -82,6 +83,7 @@ export function useGraphData(): {
           .then((result) => {
             if (cancelled) return;
             historicalCache = result;
+            setError(null);
             tryEmit();
           })
           .catch((err) => {

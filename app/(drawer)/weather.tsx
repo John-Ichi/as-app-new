@@ -37,7 +37,6 @@ import {
   Text,
   View,
 } from "react-native";
-import Animated from "react-native-reanimated";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -110,6 +109,7 @@ const Weather = () => {
     snapshot: obsSnapshot,
     isFetching: isObsFetching,
     error: obsError,
+    retry: retryObservation,
   } = useObservationWeather({
     selectedObservation,
     savedObsWeather,
@@ -118,9 +118,7 @@ const Weather = () => {
     selectObservation,
   });
 
-  const { upToDate, markUpToDate, spinStyle } = useWeatherFreshness(
-    weather.isFetching,
-  );
+  const { upToDate, markUpToDate } = useWeatherFreshness();
 
   const { scrollRef, recordSection, scrollToSection } = useSectionScroll();
 
@@ -135,6 +133,7 @@ const Weather = () => {
 
   const handleRefresh = () => {
     dismissSearch();
+    retryObservation();
     if (weather.refetch()) return;
     markUpToDate();
   };
@@ -234,9 +233,7 @@ const Weather = () => {
             accessibilityRole="button"
             accessibilityLabel="Refresh weather"
           >
-            <Animated.View style={spinStyle}>
-              <Ionicons name="refresh" size={16} color={colors.white} />
-            </Animated.View>
+            <Ionicons name="refresh" size={16} color={colors.white} />
           </PressableScale>
         )}
       </View>
@@ -365,10 +362,17 @@ const Weather = () => {
                   {obsError.message}
                 </Text>
               ) : activeObsWeather ? (
-                <ObservationCard
-                  observation={selectedObservation}
-                  info={activeObsWeather}
-                />
+                <View className="gap-y-2">
+                  <ObservationCard
+                    observation={selectedObservation}
+                    info={activeObsWeather}
+                  />
+                  {obsError ? (
+                    <Text className="text-sm text-danger font-poppins-regular text-center">
+                      Failed to refresh: {obsError.message}
+                    </Text>
+                  ) : null}
+                </View>
               ) : (
                 <Text className="text-md text-muted font-poppins-light">
                   Select a location...

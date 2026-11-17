@@ -123,9 +123,7 @@ const DrawerLayout = () => {
           }, 50);
         };
 
-        const handleStackNav = (
-          path: "/parameters" | "/notifications" | "/notifs",
-        ) => {
+        const handleStackNav = (path: "/parameters" | "/notifs") => {
           const now = Date.now();
           if (now - lastNav.current < COOLDOWN_WINDOW) return;
           lastNav.current = now;
@@ -173,18 +171,8 @@ const DrawerLayout = () => {
                 focused={false}
                 onPress={() => handleStackNav("/parameters")}
               />
-
-              {/** previous notification drawer item */}
               <DrawerRow
-                title="Notifications (old)"
-                description="Instant notifications for critical ammonia risks."
-                icon={icons.bell}
-                focused={false}
-                onPress={() => handleStackNav("/notifications")}
-              />
-
-              <DrawerRow
-                title="Notifications (new)"
+                title="Notifications"
                 description="Instant notifications for critical ammonia risks."
                 icon={icons.bell}
                 focused={false}

@@ -6,6 +6,14 @@ import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 
+const dangerLineConfig = {
+  color: colors.danger,
+  thickness: 1,
+  type: "dashed",
+  dashWidth: 6,
+  dashGap: 4,
+} as const;
+
 interface ParameterChartProps {
   id: ParameterId;
   data: { value: number; label?: string }[];
@@ -13,7 +21,7 @@ interface ParameterChartProps {
   color: string;
   yAxisMin: number;
   yAxisMax: number;
-  threshold?: number;
+  threshold?: { min?: number; max?: number };
   chartWidth: number;
   range: GraphRangeId;
   onRangeChange: (id: ParameterId, range: GraphRangeId) => void;
@@ -50,17 +58,22 @@ const ParameterChart = ({
       hideDataPoints={range !== "oneYear"}
       dataPointsRadius={4}
       dataPointsColor={color}
-      {...(threshold != null
+      {...(threshold
         ? {
-            showReferenceLine1: true,
-            referenceLine1Position: threshold,
-            referenceLine1Config: {
-              color: colors.danger,
-              thickness: 1,
-              type: "dashed",
-              dashWidth: 6,
-              dashGap: 4,
-            },
+            ...(threshold.min != null
+              ? {
+                  showReferenceLine1: true,
+                  referenceLine1Position: threshold.min,
+                  referenceLine1Config: dangerLineConfig,
+                }
+              : {}),
+            ...(threshold.max != null
+              ? {
+                  showReferenceLine2: true,
+                  referenceLine2Position: threshold.max,
+                  referenceLine2Config: dangerLineConfig,
+                }
+              : {}),
           }
         : {})}
       height={220}

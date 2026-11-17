@@ -4,6 +4,7 @@ import type { GraphDataPoint, ParameterGraphData } from "@/services/types";
 import { formatTimeAmPm } from "@/utils/format";
 import dayjs from "dayjs";
 import {
+  endAt,
   get,
   limitToFirst,
   limitToLast,
@@ -52,6 +53,40 @@ export async function fetchOldestReadingTs(
 ): Promise<number | null> {
   const snapshot = await get(
     query(ref(db, `readings/${deviceId}`), orderByKey(), limitToFirst(1)),
+  );
+  if (!snapshot.exists()) return null;
+  return Number(Object.keys(snapshot.val())[0]);
+}
+
+/** Timestamp (epoch ms) of the oldest reading at or after `since`, or null. */
+export async function fetchFirstReadingTsSince(
+  deviceId: string,
+  since: number,
+): Promise<number | null> {
+  const snapshot = await get(
+    query(
+      ref(db, `readings/${deviceId}`),
+      orderByKey(),
+      startAt(String(since)),
+      limitToFirst(1),
+    ),
+  );
+  if (!snapshot.exists()) return null;
+  return Number(Object.keys(snapshot.val())[0]);
+}
+
+/** Timestamp (epoch ms) of the newest reading at or before `until`, or null. */
+export async function fetchLastReadingTsUntil(
+  deviceId: string,
+  until: number,
+): Promise<number | null> {
+  const snapshot = await get(
+    query(
+      ref(db, `readings/${deviceId}`),
+      orderByKey(),
+      endAt(String(until)),
+      limitToLast(1),
+    ),
   );
   if (!snapshot.exists()) return null;
   return Number(Object.keys(snapshot.val())[0]);
@@ -134,11 +169,14 @@ function buildOneDayWallClock(
 function buildOneMonthWallClock(
   readings: Record<string, Record<string, number>>,
 ): Record<ParameterId, GraphDataPoint[]> {
-  const todayMidnight = dayStartFor(Date.now());
-  const slots = Array.from(
-    { length: 30 },
-    (_, i) => todayMidnight - (29 - i) * DAY_MS,
-  );
+  // Local calendar-day subtraction (DST-safe) so every slot matches the
+  // readings' local-midnight keys, even if timezone rules ever shift.
+  const slots = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (29 - i));
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  });
   return buildWallClockBuckets(
     readings,
     slots,

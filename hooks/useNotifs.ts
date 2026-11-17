@@ -25,6 +25,7 @@ export function useNotifs(): {
 
     setIsLoading(true);
     setError(null);
+    setNotifications([]);
 
     const unsubscribe = subscribeNotifications(
       selectedDevice.id,

@@ -50,7 +50,12 @@ function parameterStatus(value: number) {
 
 const Parameters = () => {
   const { selectedDevice } = useDevice();
-  const { data: allData, isLoading, error } = useGraphData();
+  const {
+    data: allData,
+    isLoading,
+    isRefreshing: isHistoricalRefreshing,
+    error,
+  } = useGraphData();
   const { width: screenWidth } = useWindowDimensions();
   const {
     keys,
@@ -118,7 +123,9 @@ const Parameters = () => {
     );
 
   const isRefreshing =
-    (isRawDataLoading || isLoading) && values.length > 0 && allData.length > 0;
+    (isRawDataLoading || isLoading || isHistoricalRefreshing) &&
+    values.length > 0 &&
+    allData.length > 0;
 
   const colCount = 1 + allData.length;
   const naturalWidth = Math.floor((screenWidth - 32) / colCount);
@@ -139,15 +146,14 @@ const Parameters = () => {
     values: allData.map((p) => formatCellValue(p.id, p.oneDay?.[i]?.value)),
   }));
 
-  const ammonia = allData.find((d) => d.id === "ammonia");
-  const points = ammonia?.oneDay;
-  const validPoints = points?.filter((p) => !Number.isNaN(p.value)) ?? [];
-
   const maxVal = values.length > 0 ? Math.max(...values) : 0;
   const minVal = values.length > 0 ? Math.min(...values) : 0;
+  // AVG from the raw hourly readings (full RTDB precision) — classifying the
+  // bucket-rounded mean could flip zone color right at the threshold.
+  const rawValid = values.filter((v) => !Number.isNaN(v));
   const avgVal =
-    validPoints.length > 0
-      ? validPoints.reduce((s, p) => s + p.value, 0) / validPoints.length
+    rawValid.length > 0
+      ? rawValid.reduce((s, v) => s + v, 0) / rawValid.length
       : 0;
   const maxIdx = values.indexOf(maxVal);
   const minIdx = values.indexOf(minVal);

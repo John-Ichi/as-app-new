@@ -40,7 +40,6 @@ export interface ParameterGraphData {
 
 export interface AppNotification {
   id: string;
-  type: "critical" | "warning";
   title: string;
   date: string;
   read: boolean;

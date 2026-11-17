@@ -2,7 +2,7 @@
 // state-change alerts.
 // Usage: node scripts/seed-rtdb.mjs [--device sensor-1] [--dry-run] [--no-alerts]
 
-import { requireRtdbUrl, rtdbPatch } from "./lib/rtdb.mjs";
+import { requireRtdbUrl, rtdbGet, rtdbPatch } from "./lib/rtdb.mjs";
 import {
   ALERT_COOLDOWN_HRS,
   generateAlerts,
@@ -69,7 +69,7 @@ async function main() {
       );
       for (const alert of sampleAlerts.slice(0, 5)) {
         console.log(
-          `  ${alert.type.toUpperCase()}  ${alert.parameter}: ${alert.value} (threshold: ${alert.threshold})`,
+          `  ${alert.parameter}: ${alert.value} (threshold: ${alert.threshold})`,
         );
       }
       if (sampleAlerts.length > 5) {
@@ -96,17 +96,33 @@ async function main() {
     totalNew += newCount;
 
     if (!noAlerts) {
-      const deviceReadings = Object.entries(readingsBatch).map(
+      // Backfill: generate alerts from the FULL persisted window (existing +
+      // newly written readings), so reruns after a --no-alerts run or a failed
+      // alert write heal their missing alerts. Only keys not already present
+      // are patched — existing alerts keep their read/pushed state.
+      const windowReadings = await rtdbGet(`/readings/${device.id}`);
+      const deviceReadings = Object.entries(windowReadings ?? {}).map(
         ([ts, values]) => ({ ts: Number(ts), values }),
       );
-      const alerts = generateAlerts(deviceReadings, end);
-      const alertCount = Object.keys(alerts).length;
-      const unread = Object.values(alerts).filter((alert) => !alert.read).length;
+      const generated = generateAlerts(deviceReadings, end);
+
+      const existingAlerts = await rtdbGet(`/alerts/${device.id}`);
+      const newAlerts = Object.fromEntries(
+        Object.entries(generated).filter(
+          ([key]) => !(existingAlerts && key in existingAlerts),
+        ),
+      );
+      const alertCount = Object.keys(newAlerts).length;
+      const unread = Object.values(newAlerts).filter(
+        (alert) => !alert.read,
+      ).length;
 
       if (alertCount > 0) {
-        await rtdbPatch(`/alerts/${device.id}`, alerts);
+        await rtdbPatch(`/alerts/${device.id}`, newAlerts);
       }
-      console.log(`  ${device.id}: ${alertCount} alerts written (${unread} unread)`);
+      console.log(
+        `  ${device.id}: ${alertCount} new alerts written (${unread} unread)`,
+      );
     }
   }
 

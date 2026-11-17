@@ -32,9 +32,13 @@ export const LoadingState = () => (
 
 export const EmptyState = ({ title, message, action }: EmptyStateProps) => (
   <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">
-    <View className="flex-1 items-center justify-center">
-      <Text className="text-xl text-primary font-poppins-bold">{title}</Text>
-      <Text className="text-lg text-muted font-poppins-light">{message}</Text>
+    <View className="flex-1 items-center justify-center px-4">
+      <Text className="text-xl text-primary text-center font-poppins-bold">
+        {title}
+      </Text>
+      <Text className="text-lg text-muted text-center font-poppins-light">
+        {message}
+      </Text>
     </View>
     {action ? (
       <View className="items-center pb-18">
@@ -54,9 +58,11 @@ export const EmptyState = ({ title, message, action }: EmptyStateProps) => (
 
 export const ErrorState = ({ error, action }: ErrorStateProps) => (
   <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-background">
-    <View className="flex-1 items-center justify-center">
-      <Text className="text-xl text-danger font-poppins-bold">Error</Text>
-      <Text className="text-lg text-muted font-poppins-light">
+    <View className="flex-1 items-center justify-center px-4">
+      <Text className="text-xl text-danger text-center font-poppins-bold">
+        Error
+      </Text>
+      <Text className="text-lg text-muted text-center font-poppins-light">
         {error.message}
       </Text>
     </View>

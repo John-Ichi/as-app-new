@@ -31,7 +31,7 @@ export function subscribeNotifications(
     (Date.now() - Math.max(0, cutoffDays) * 24 * 60 * 60 * 1000) / 1000;
 
   const unsubscribe = onValue(
-    query(alertsRef, orderByChild("ts"), limitToLast(300)),
+    query(alertsRef, orderByChild("ts"), limitToLast(2000)),
     (snapshot) => {
       const data = snapshot.val();
       if (!data) {
@@ -42,7 +42,6 @@ export function subscribeNotifications(
       const notifications = Object.entries(data)
         .map(([id, alert]: [string, any]) => ({
           id,
-          type: alert.type,
           title: alert.title,
           date: formatTimestamp(alert.ts),
           read: alert.read ?? false,

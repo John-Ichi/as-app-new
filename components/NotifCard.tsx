@@ -6,6 +6,7 @@ import { Text, View } from "react-native";
 
 interface NotifCardProps {
   id: string;
+  parameter: string;
   date: string;
   title: string;
   value: number;
@@ -17,6 +18,7 @@ interface NotifCardProps {
 
 const NotifCard = ({
   id,
+  parameter,
   date,
   title,
   value,
@@ -28,7 +30,7 @@ const NotifCard = ({
   <PressableScale
     onPress={() => (deleting ? onDelete(id) : onToggleRead(id, !read))}
     accessibilityRole="button"
-    accessibilityLabel={`${title}, ${date}, NH₃: ${value}`}
+    accessibilityLabel={`${title}, ${date}, ${parameter}: ${value}`}
     accessibilityHint={
       deleting
         ? "Delete this notification"
@@ -53,7 +55,7 @@ const NotifCard = ({
           className="text-lg text-primary font-poppins-light"
           style={{ lineHeight: 18 }}
         >
-          NH₃: {value}
+          {parameter}: {value}
         </Text>
       </View>
       {deleting ? (

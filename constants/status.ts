@@ -35,8 +35,10 @@ export function classify(
   id: ParameterId,
   value: number,
 ): ParameterStatus | undefined {
-  const metadata = parameterMap[id];
-  if (!metadata?.threshold) return undefined;
-  if (value > metadata.threshold.critical) return "critical";
+  if (value == null || Number.isNaN(value)) return undefined;
+  const threshold = parameterMap[id]?.threshold;
+  if (!threshold) return undefined;
+  if (threshold.max != null && value > threshold.max) return "critical";
+  if (threshold.min != null && value < threshold.min) return "critical";
   return "normal";
 }

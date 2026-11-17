@@ -33,6 +33,7 @@ const actionLabels: Record<ActionId, string> = {
 const Notifs = () => {
   const { selectedDevice } = useDevice();
   const { data: items, isLoading, error, lastUpdated } = useNotifs();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const counts: Record<"all" | "unread", number> = {
     all: items.length,
@@ -42,10 +43,14 @@ const Notifs = () => {
   const handleToggleRead = useCallback(
     async (id: string, read: boolean) => {
       if (!selectedDevice) return;
+      setActionError(null);
       try {
         await setNotificationRead(selectedDevice.id, id, read);
       } catch (e) {
         console.error("Failed to update notification: ", e);
+        setActionError(
+          "Failed to update notification — it wasn't saved. Try again.",
+        );
       }
     },
     [selectedDevice],
@@ -61,6 +66,7 @@ const Notifs = () => {
   const unreadVisible = visible.filter((notif) => notif.read !== true);
   const handleAcknowledgeAll = useCallback(async () => {
     if (!selectedDevice || unreadVisible.length === 0) return;
+    setActionError(null);
     setAcknowledgeAll(true);
     try {
       await acknowledgeNotifications(
@@ -69,6 +75,7 @@ const Notifs = () => {
       );
     } catch (e) {
       console.error("Failed to acknowledge all: ", e);
+      setActionError("Failed to mark all as read — try again.");
     } finally {
       setAcknowledgeAll(false);
     }
@@ -82,10 +89,12 @@ const Notifs = () => {
     (id: string) => {
       const deleteNotif = async () => {
         if (!selectedDevice) return;
+        setActionError(null);
         try {
           await deleteNotification(selectedDevice.id, id);
         } catch (e) {
           console.error("Failed to delete notification: ", e);
+          setActionError("Failed to delete notification — try again.");
         }
       };
       if (Platform.OS === "web") {
@@ -172,6 +181,11 @@ const Notifs = () => {
             )}
           </PressableScale>
         </View>
+        {actionError ? (
+          <Text className="text-sm text-danger font-poppins-regular text-center pb-2">
+            {actionError}
+          </Text>
+        ) : null}
         <FlatList
           data={visible}
           keyExtractor={(item) => item.id}
@@ -179,6 +193,7 @@ const Notifs = () => {
           renderItem={({ item }) => (
             <NotifCard
               id={item.id}
+              parameter={item.parameter}
               date={item.date}
               title={item.title}
               value={item.value}

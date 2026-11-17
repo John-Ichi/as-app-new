@@ -42,7 +42,7 @@ const Dashboard = () => {
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
       <View className="w-full h-16 bg-primary rounded-b-xl"></View>
-      <View className="w-full max-w-xl mx-auto px-4">
+      <View className="flex-1 w-full max-w-xl mx-auto px-4">
         <View
           className={`${overallStatusBg[overallStatus]} rounded-xl shadow-md shadow-slate-400/30 items-center -mt-14 mx-12 py-4`}
         >

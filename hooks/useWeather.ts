@@ -7,6 +7,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const WEATHER_CACHE_KEY = "weather-cache-v2";
 export const REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 export const REQUEST_TIMEOUT_MS = 10_000;
+/** Faster retry cadence after a failed/aborted fetch, so a flaky network
+ * window costs minutes of staleness instead of a full hourly cycle. */
+export const RETRY_BACKOFF_MS = 5 * 60 * 1000;
 
 interface WeatherCache {
   fetchedAt: number;
@@ -72,72 +75,85 @@ export function useWeather(
   locationsRef.current = locations;
   const lastUpdatedRef = useRef(lastUpdated);
   lastUpdatedRef.current = lastUpdated;
+  const dataRef = useRef(data);
+  dataRef.current = data;
   const errorRef = useRef(error);
   errorRef.current = error;
   const abortRef = useRef<AbortController | null>(null);
   const hydratedRef = useRef(false);
 
-  const doFetch = useCallback(async (opts?: { replace?: boolean }) => {
-    if (
-      abortRef.current &&
-      !abortRef.current.signal.aborted &&
-      !opts?.replace
-    )
-      return;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const doFetch = useCallback(
+    async (opts?: { replace?: boolean }): Promise<boolean> => {
+      if (
+        abortRef.current &&
+        !abortRef.current.signal.aborted &&
+        !opts?.replace
+      )
+        return true; // already fetching — neutral, not a failure
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    const sig = signatureOf(locationsRef.current);
-    setIsFetching(true);
-    setError(null);
+      const sig = signatureOf(locationsRef.current);
+      setIsFetching(true);
+      setError(null);
 
-    let timedOut = false;
-    const timeoutId = setTimeout(() => {
-      timedOut = true;
-      controller.abort();
-    }, REQUEST_TIMEOUT_MS);
+      let timedOut = false;
+      const timeoutId = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, REQUEST_TIMEOUT_MS);
 
-    try {
-      const results = await fetchWeather(
-        locationsRef.current,
-        controller.signal
-      );
-      if (controller.signal.aborted) return;
+      try {
+        const results = await fetchWeather(
+          locationsRef.current,
+          controller.signal
+        );
+        if (controller.signal.aborted) return false;
 
-      const nextData: Record<number, WeatherInfo> = {};
-      locationsRef.current.forEach((loc, index) => {
-        const info = results[index];
-        if (info) nextData[loc.id] = info;
-      });
+        const nextData: Record<number, WeatherInfo> = {};
+        locationsRef.current.forEach((loc, index) => {
+          const info = results[index];
+          if (info) nextData[loc.id] = info;
+        });
 
-      const fetchedAt = Date.now();
-      setData(nextData);
-      setLastUpdated(fetchedAt);
-      lastUpdatedRef.current = fetchedAt;
-      writeWeatherCache({ fetchedAt, signature: sig, data: nextData });
-    } catch (err) {
-      if (controller.signal.aborted) {
-        if (timedOut) {
-          setError(
-            new Error(
-              "Request timed out. Check your connection and try again."
-            )
-          );
+        const fetchedAt = Date.now();
+        setData(nextData);
+        setLastUpdated(fetchedAt);
+        lastUpdatedRef.current = fetchedAt;
+        writeWeatherCache({ fetchedAt, signature: sig, data: nextData });
+        return true;
+      } catch (err) {
+        if (controller.signal.aborted) {
+          if (timedOut) {
+            setError(
+              new Error(
+                "Request timed out. Check your connection and try again."
+              )
+            );
+          } else {
+            // The fetch was killed by a focus change (tab switch, drawer,
+            // navigation) — the next focus effect or backoff retry recovers.
+            console.debug(
+              "Weather fetch aborted (screen focus changed) — will retry."
+            );
+          }
+          return false;
         }
-        return;
+        setError(
+          err instanceof Error ? err : new Error("Failed to fetch weather.")
+        );
+        return false;
+      } finally {
+        clearTimeout(timeoutId);
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+          setIsFetching(false);
+        }
       }
-      setError(
-        err instanceof Error ? err : new Error("Failed to fetch weather.")
-      );
-    } finally {
-      clearTimeout(timeoutId);
-      if (abortRef.current === controller) {
-        abortRef.current = null;
-        setIsFetching(false);
-      }
-    }
-  }, []);
+    },
+    []
+  );
 
   const signature = enabled ? signatureOf(locations) : null;
 
@@ -187,17 +203,18 @@ export function useWeather(
           lastUpdatedRef.current !== null
             ? Date.now() - lastUpdatedRef.current
             : Number.POSITIVE_INFINITY;
-        if (age >= REFRESH_INTERVAL_MS) doFetch();
+        const hasNoData = Object.keys(dataRef.current).length === 0;
+        if (age >= REFRESH_INTERVAL_MS || hasNoData) doFetch();
       }
 
       let timer: ReturnType<typeof setTimeout> | undefined;
       const schedule = (delayMs: number) => {
-        timer = setTimeout(() => {
-          void doFetch();
+        timer = setTimeout(async () => {
+          const ok = await doFetch();
           // A successful fetch updates lastUpdated, which re-runs this effect
-          // and reschedules from the new expiry. Failure falls back to the
-          // normal cadence.
-          schedule(REFRESH_INTERVAL_MS);
+          // and reschedules from the new expiry. A failure falls back to the
+          // shorter retry cadence instead of disappearing for a full hour.
+          schedule(ok ? REFRESH_INTERVAL_MS : RETRY_BACKOFF_MS);
         }, delayMs);
       };
       const remaining =

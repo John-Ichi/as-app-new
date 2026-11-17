@@ -47,7 +47,7 @@ export async function runRelay(env) {
     if (!alerts) continue;
 
     const unpushed = Object.entries(alerts).filter(
-      ([_, alert]) => !alert.pushed
+      ([_, alert]) => !alert.pushed && !alert.deleted
     );
 
     if (unpushed.length === 0) continue;
@@ -74,24 +74,64 @@ export async function runRelay(env) {
         sound: "default",
         title: alert.title,
         body: `${alert.parameter}: ${alert.value}`,
-        data: { deviceId, alertId, url: "/notifications" },
+        data: { deviceId, alertId, url: "/notifs" },
         channelId: "alerts",
       }));
 
-      const response = await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${EXPO_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify(messages),
-      });
+      // Expo's push API accepts at most 100 messages per request.
+      const batches = [];
+      for (let i = 0; i < messages.length; i += 100) {
+        batches.push(messages.slice(i, i + 100));
+      }
 
-      if (response.ok) {
+      let anyDelivered = false;
+      let allDelivered = true;
+      for (const batch of batches) {
+        const response = await fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${EXPO_ACCESS_TOKEN}`,
+          },
+          body: JSON.stringify(batch),
+        });
+
+        if (!response.ok) {
+          allDelivered = false;
+          continue;
+        }
+
+        // HTTP 200 still carries per-message tickets — a token can fail
+        // (invalid/expired) while the request itself succeeds.
+        const result = await response.json();
+        const tickets = result?.data ?? [];
+        for (const ticket of tickets) {
+          if (ticket.status === "error") {
+            allDelivered = false;
+            console.error(
+              `Expo push ticket error for ${alertId} on ${deviceId}: ${ticket.message ?? "unknown error"} (details: ${JSON.stringify(ticket.details ?? {})})`
+            );
+          }
+        }
+        if (tickets.some((ticket) => ticket.status === "ok")) {
+          anyDelivered = true;
+        } else {
+          allDelivered = false;
+        }
+      }
+
+      // Delivered if at least one ticket succeeded (a single bad token among
+      // good ones doesn't trap the alert in a retry loop). All-failed batches
+      // stay unpushed and retry on the next cron.
+      if (anyDelivered) {
         const marked = await markPushed(
           `${FIREBASE_RTDB_URL}/alerts/${deviceId}/${alertId}/pushed.json`
         );
         if (marked) totalSent++;
+      } else {
+        console.error(
+          `No successful Expo deliveries for ${alertId} on ${deviceId} — will retry on the next cron.`
+        );
       }
     }
   }

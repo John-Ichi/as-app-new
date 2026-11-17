@@ -41,7 +41,7 @@ export function LocationCards({
       onLayout={(e) => setCardsWidth(e.nativeEvent.layout.width)}
     >
       <View className="flex-row gap-x-4">
-        {savedLocations.slice(0, 5).map((location) => {
+        {savedLocations.map((location) => {
           const info = weatherData[location.id];
           const condition = info
             ? getWeatherCondition(info.weatherCode)

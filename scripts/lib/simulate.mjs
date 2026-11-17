@@ -20,10 +20,14 @@ export const PARAM_CONFIG = {
   salinity:        { base: 15,   amp: 1.5,  noise: 0.3,  decimals: 1 },
 };
 
+// Safe-zone definitions per the adviser (mirrors constants/parameters.ts —
+// binary: outside the zone = alert; no warning/critical tiers).
 export const THRESHOLDS = {
-  ammonia:  { warning: 0.06, critical: 0.2 },
-  temperature: { warning: 32, warningMin: 22 },
-  pH: { warning: 8.5, warningMin: 6.0 },
+  ammonia:         { max: 0.06 },
+  temperature:     { min: 26, max: 32 },
+  dissolvedOxygen: { min: 5 },
+  pH:              { min: 6.5, max: 8.5 },
+  salinity:        { min: 2, max: 15 },
 };
 
 // ── Reading Generation ─────────────────────────────────
@@ -37,17 +41,23 @@ function getDayOffset(dayIndex) {
   return (Math.random() - 0.5) * 0.1; // ±5%
 }
 
-// The daily cycle is derived from the reading's wall-clock time, so every
-// script agrees on the phase regardless of where its window starts.
+// The cycle phase is derived from window-spanning hours (day index +
+// wall-clock hour), so every script agrees on the phase regardless of where
+// its window starts, and per-parameter periods (e.g. pH 48h) span correctly.
 export function generateReading(timestamp, dayIndex) {
   const date = new Date(timestamp);
   const hourFraction = date.getHours() + date.getMinutes() / 60;
-  const cycle = Math.sin((hourFraction / 24) * 2 * Math.PI);
+  // Window-spanning hours: day 0 starts at 0, day 1 at 24, ... — so a
+  // parameter's cycle continues across the whole window. For 24h periods
+  // this reduces to the plain hourFraction (identical to previous behavior).
+  const hoursInto = dayIndex * 24 + hourFraction;
   const dailyOffset = getDayOffset(dayIndex);
 
   function genValue(cfg) {
     const base = cfg.base * (1 + dailyOffset);
     const inverted = cfg.invert ? -1 : 1;
+    const period = cfg.periodHrs ?? 24;
+    const cycle = Math.sin((hoursInto / period) * 2 * Math.PI);
     let value = base + cycle * cfg.amp * inverted;
     value += (Math.random() - 0.5) * 2 * cfg.noise;
 
@@ -73,13 +83,14 @@ export function generateReading(timestamp, dayIndex) {
 export const ALERT_COOLDOWN_HRS = 24;
 export const ALERT_READ_DAYS = 7;
 
-const STATUS_RANK = { normal: 0, warning: 1, critical: 2 };
+const STATUS_RANK = { normal: 0, critical: 1 };
 
+// Binary zone check — mirrors classify() in constants/status.ts.
 function alertStatus(param, value) {
   const t = THRESHOLDS[param];
   if (!t) return "normal";
-  if (t.critical != null && value >= t.critical) return "critical";
-  if (value >= t.warning || value <= (t.warningMin ?? -Infinity)) return "warning";
+  if (t.max != null && value > t.max) return "critical";
+  if (t.min != null && value < t.min) return "critical";
   return "normal";
 }
 
@@ -111,14 +122,11 @@ export function generateAlerts(readings, now) {
       }
       lastAlertTs[param] = tsSec;
 
-      let threshold;
-      if (status === "critical") threshold = t.critical;
-      else if (value <= (t.warningMin ?? -Infinity)) threshold = t.warningMin;
-      else threshold = t.warning;
+      const threshold =
+        t.max != null && value > t.max ? t.max : t.min;
 
       alerts[`${tsSec}-${param}`] = {
-        type: status,
-        title: `${param.toUpperCase()} ${status === "critical" ? "SPIKE" : "ALERT"}`,
+        title: `${param.toUpperCase()} ALERT`,
         parameter: param,
         value: round(value, 3),
         threshold,

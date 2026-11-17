@@ -3,6 +3,7 @@ export const colors = {
   muted: "#473f3f",
   primary: "#0b3d59",
   tertiary: "rgba(11, 61, 89, 0.44)",
+  tertiary_light: "rgba(11, 61, 89, 0.08)",
   pressed: "rgba(0, 0, 0, 0.25)",
   danger: "#de2222",
 } as const;

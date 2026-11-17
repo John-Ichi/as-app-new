@@ -9,6 +9,7 @@ import home from "@/assets/icons/home.png";
 import logo from "@/assets/icons/logo.png";
 import partlySunnyDay from "@/assets/icons/partly-sunny-day.png";
 import pH from "@/assets/icons/ph.png";
+import salinity from "@/assets/icons/salinity.png";
 import setting from "@/assets/icons/setting.png";
 import temperature from "@/assets/icons/temperature.png";
 import turbidity from "@/assets/icons/turbidity.png";
@@ -27,6 +28,7 @@ export const icons = {
   dissolvedOxygen,
   pH,
   turbidity,
+  salinity,
   warning,
   download,
   criticalAlert,

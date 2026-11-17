@@ -2,6 +2,11 @@ import { ParameterId } from "@/constants/parameters";
 import { ParameterStatus } from "@/constants/status";
 import { useDevice } from "@/contexts/DeviceContext";
 import { getWaterQualityData } from "@/services/firebase/waterQuality";
+import {
+  describeForecast,
+  getCachedForecast,
+  subscribeForecast,
+} from "@/services/lstm";
 import { useEffect, useState } from "react";
 
 interface ParameterReading {
@@ -13,7 +18,7 @@ interface ParameterReading {
 interface WaterQualityData {
   overallStatus: "NORMAL" | "WARNING" | "CRITICAL";
   parameters: ParameterReading[];
-  predictiveAlert: { risk: "LOW" | "MEDIUM" | "HIGH" };
+  predictiveAlert: { message: string; alert: boolean };
   timestamp: number | null;
   isLoading: boolean;
   error: Error | null;
@@ -24,7 +29,7 @@ export function useWaterQualityData(): WaterQualityData {
   const [data, setData] = useState<WaterQualityData>({
     overallStatus: "NORMAL",
     parameters: [],
-    predictiveAlert: { risk: "LOW" },
+    predictiveAlert: { message: "No forecast yet", alert: false },
     timestamp: null,
     isLoading: true,
     error: null,
@@ -38,7 +43,22 @@ export function useWaterQualityData(): WaterQualityData {
       (error) => setData((prev) => ({ ...prev, error, isLoading: false })),
     );
 
-    return unsubscribe;
+    const applyForecast = () => {
+      const cached = getCachedForecast();
+      if (cached) {
+        setData((prev) => ({
+          ...prev,
+          predictiveAlert: describeForecast(cached),
+        }));
+      }
+    };
+    applyForecast();
+    const unsubForecast = subscribeForecast(applyForecast);
+
+    return () => {
+      unsubscribe();
+      unsubForecast();
+    };
   }, [selectedDevice]);
 
   return data;

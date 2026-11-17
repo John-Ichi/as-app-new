@@ -1,7 +1,11 @@
-import { onValue, ref } from "firebase/database";
-import { db } from "@/firebase/config";
 import { classify } from "@/constants/status";
+import { db } from "@/firebase/config";
+import {
+  describeForecast,
+  getCachedForecast,
+} from "@/services/lstm";
 import type { ParameterReading, WaterQualityData } from "@/services/types";
+import { onValue, ref } from "firebase/database";
 
 export function getWaterQualityData(
   deviceId: string,
@@ -18,7 +22,7 @@ export function getWaterQualityData(
         onData({
           overallStatus: "NORMAL",
           parameters: [],
-          predictiveAlert: { risk: "LOW" },
+          predictiveAlert: { message: "No forecast yet", alert: false },
           timestamp: null,
           isLoading: false,
           error: null,
@@ -27,26 +31,49 @@ export function getWaterQualityData(
       }
 
       const readings: ParameterReading[] = [
-        { id: "ammonia", value: data.ammonia, status: classify("ammonia", data.ammonia) },
-        { id: "temperature", value: data.temperature, status: classify("temperature", data.temperature) },
-        { id: "dissolvedOxygen", value: data.dissolvedOxygen, status: classify("dissolvedOxygen", data.dissolvedOxygen) },
+        {
+          id: "ammonia",
+          value: data.ammonia,
+          status: classify("ammonia", data.ammonia),
+        },
+        {
+          id: "temperature",
+          value: data.temperature,
+          status: classify("temperature", data.temperature),
+        },
+        {
+          id: "dissolvedOxygen",
+          value: data.dissolvedOxygen,
+          status: classify("dissolvedOxygen", data.dissolvedOxygen),
+        },
         { id: "pH", value: data.pH, status: classify("pH", data.pH) },
-        { id: "turbidity", value: data.turbidity, status: classify("turbidity", data.turbidity) },
+        {
+          id: "turbidity",
+          value: data.turbidity,
+          status: classify("turbidity", data.turbidity),
+        },
+        {
+          id: "salinity",
+          value: data.salinity,
+          status: classify("salinity", data.salinity),
+        },
       ];
 
       const ammonia = readings.find((p) => p.id === "ammonia");
       let overallStatus: WaterQualityData["overallStatus"] = "NORMAL";
       if (ammonia?.status === "critical") overallStatus = "CRITICAL";
-      else if (ammonia?.status === "warning") overallStatus = "WARNING";
 
       const rawTs = data.ts ?? data.timestamp ?? null;
       const timestamp =
         rawTs != null ? (rawTs < 1e12 ? rawTs * 1000 : rawTs) : null;
 
+      const cached = getCachedForecast();
       onData({
         overallStatus,
         parameters: readings,
-        predictiveAlert: { risk: "LOW" },
+        predictiveAlert: cached
+          ? describeForecast(cached)
+          : { message: "No forecast yet", alert: false },
         timestamp,
         isLoading: false,
         error: null,

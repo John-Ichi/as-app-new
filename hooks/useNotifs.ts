@@ -1,9 +1,9 @@
 import { useDevice } from "@/contexts/DeviceContext";
 import { subscribeNotifications } from "@/services/firebase/notifications";
-import { AppNotification } from "@/services/types";
+import type { AppNotification } from "@/services/types";
 import { useEffect, useState } from "react";
 
-export function useNotifications(): {
+export function useNotifs(): {
   data: AppNotification[];
   isLoading: boolean;
   error: Error | null;
@@ -25,6 +25,7 @@ export function useNotifications(): {
 
     setIsLoading(true);
     setError(null);
+    setNotifications([]);
 
     const unsubscribe = subscribeNotifications(
       selectedDevice.id,

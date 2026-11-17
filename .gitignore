@@ -55,3 +55,12 @@ GoogleService-Info.plist
 # .opencode
 .opencode/
 
+# personal file
+PROMPT.md
+
+# archive
+archive/
+
+# Python
+__pycache__/
+*.pyc

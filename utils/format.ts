@@ -12,5 +12,5 @@ export function formatCellValue(
   value: number | null | undefined,
 ): string {
   if (value == null || Number.isNaN(value)) return "-";
-  return paramId === "ammonia" ? value.toFixed(3) : value.toFixed(2);
+  return paramId === "ammonia" ? value.toFixed(4) : value.toFixed(2);
 }

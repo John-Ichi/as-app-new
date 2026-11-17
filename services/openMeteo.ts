@@ -27,7 +27,7 @@ export async function searchPhilippineLocations(
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 
-function heatIndexCelsius(tempC: number, humidity: number): number {
+export function heatIndexCelsius(tempC: number, humidity: number): number {
   const tF = (tempC * 9) / 5 + 32;
   let hi =
     -42.379 +
@@ -48,7 +48,7 @@ function heatIndexCelsius(tempC: number, humidity: number): number {
   return ((hi - 32) * 5) / 9;
 }
 
-function maxHeatIndex(
+export function maxHeatIndex(
   tempsC: (number | null)[],
   humidity: (number | null)[],
 ): number {
@@ -68,7 +68,7 @@ function nowIsoHour(time: string): number {
   return new Date(time).getTime();
 }
 
-function rainRolling24h(
+export function rainRolling24h(
   times: string[],
   precipitation: (number | null)[],
   nowIso: string,
